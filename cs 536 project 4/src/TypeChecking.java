@@ -364,4 +364,9 @@ public class TypeChecking extends Visitor {
 		System.out.println("Type checking for bitStringNode not yet implemented");
 	}
 
+	@Override
+	void visit(forNode n) {
+		// TODO Auto-generated method stub
+		
+	}
 }

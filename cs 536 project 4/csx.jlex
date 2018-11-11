@@ -1,0 +1,344 @@
+import java_cup.runtime.*;
+import java.util.*;
+
+
+class CSXToken {  
+	int linenum;
+	int colnum;
+	CSXToken(int line,int col){
+		linenum=line;colnum=col;};
+}
+class CSXReservedToken extends CSXToken {
+	String reservedText;
+	CSXReservedToken(String text,int line,int col){
+		super(line,col); reservedText=text;};
+}
+class CSXBitStringToken extends CSXToken {
+	int intValue;
+	String bitString;
+	CSXBitStringToken(String bitStr,int line,int col){
+	   super(line,col);  bitString=bitStr;
+	   StringBuilder sb = new StringBuilder(bitString);
+	   sb.deleteCharAt(sb.length() - 1); // remove the 'b'
+	   
+	   // add or remove bits until there are only 32 bits
+	   if (sb.length() > 32) {
+		   System.out.println("error: more than 32 bits, bits removed from left");
+		   while (sb.length() > 32) {
+			   sb.deleteCharAt(0); // delete bits from left if too long
+		   }
+	   }
+	   while (sb.length() < 32) {
+		   sb.insert(0, 0); // add bits to left if too short
+	   }
+	   
+	   boolean negative = false;
+	   if (sb.charAt(0) == '1') { // flip numbers for two's complement for negatives
+		   negative = true;
+		   for (int i = 0; i< sb.length(); i++) {
+			   if (sb.charAt(i) == '0') {
+				   sb.setCharAt(i, '1');
+			   }
+			   else if (sb.charAt(i) == '1') {
+				   sb.setCharAt(i, '0');
+			   }
+		   }
+	   }
+	   
+	   intValue = Integer.parseInt(sb.toString(), 2); // convert binary to base 10
+	   if (negative) {
+		   intValue++; //adding one per two's complement rules
+		   intValue = -intValue;
+	   }};
+}
+class CSXIntLitToken extends CSXToken {
+	int intValue;
+	CSXIntLitToken(String val,int line,int col){
+		super(line,col);
+		Boolean negative = false;
+		//Check if it is a negative value
+		if(val.contains("~")){
+			negative = true;
+			val = val.substring(1, val.length());
+		}
+		Double temp = Double.valueOf(val);
+		if (negative) {
+			temp = temp * -1;
+		}
+		//Check against max/min value and replace if necessary
+		if(temp > Integer.MAX_VALUE) {
+			intValue = Integer.MAX_VALUE;
+			System.out.print("Error: Integer literal " + val + 
+					" too large; replaced with " + Integer.toString(Integer.MAX_VALUE) + "\n");
+			return;
+		}
+		else if(temp < Integer.MIN_VALUE) {
+			intValue = Integer.MIN_VALUE;
+			System.out.print("Error: Integer literal ~" + val + 
+					" too small; replaced with " + Integer.toString(Integer.MIN_VALUE) + "\n");
+			return;
+		} else {
+			intValue = temp.intValue();
+		}
+	};
+}
+class CSXIdentifierToken extends CSXToken {
+	String identifierText;
+	CSXIdentifierToken(String text,int line,int col){
+		super(line,col);identifierText=text;};
+}
+
+class CSXCharLitToken extends CSXToken {
+	char charValue;
+	CSXCharLitToken(String val,int line,int col){
+		super(line,col);
+		charValue = val.charAt(1);
+		if (charValue == '\\' && val.length() > 1){
+			if (val.charAt(2) == 'n'){
+				charValue = 10;
+			}
+			else if (val.charAt(2) == 't'){
+				charValue = 9;
+			}
+			else if (val.charAt(2) == '\''){
+				charValue = 39;
+			}
+			else if (val.charAt(2) == '\\'){
+				charValue = 92;
+			}
+		}
+		
+	};
+}
+
+class CSXStringLitToken extends CSXToken {
+	String stringText; // Full text of string literal,
+                          //  including quotes & escapes
+	CSXStringLitToken(String text,int line,int col){
+		super(line,col);
+		stringText=text;
+	};	
+}
+
+// This class is used to track line and column numbers
+// Please feel free to change or extend it
+class Pos {
+	static int  linenum = 1; /* maintain this as line number current
+                                 token was scanned on */
+	static int  colnum = 1; /* maintain this as column number current
+                                 token began at */
+	static int  line = 1; /* maintain this as line number after
+					scanning current token  */
+	static int  col = 1; /* maintain this as column number after
+					scanning current token  */
+
+	static void setpos() { // set starting position for current token
+		linenum = line;
+		colnum = col;
+	}
+}
+
+%%
+Digit=[0-9]
+AnyLet=[A-Za-z]
+Others=[0-9'&.]
+
+// Tell JLex to have yylex() return a Symbol, as JavaCUP will require
+%type Symbol
+
+// Tell JLex what to return when eof of file is hit
+%eofval{
+return new Symbol(sym.EOF, new  CSXToken(0,0));
+%eofval}
+
+%%
+\r?\n {Pos.line +=1; Pos.col = 1;}
+
+[\040\t]+ {Pos.setpos(); Pos.col += yytext().length();}
+
+[/][/][^\r\n]*	{/* single line comment*/}
+
+[#][#]([^#]|[#][^#])*[#][#] { // multi line comment
+			for (int i = 0; i < yytext().length(); i++) {
+			    // check for new lines and update pos appropriately
+				if (yytext().charAt(i) == '\n') {
+					Pos.line += 1;
+					Pos.col = 1;
+				}
+				else {
+					Pos.col += 1;
+				}
+			}
+		}
+
+[bB][oO][oO][lL] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_BOOL,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[bB][rR][eE][aA][kK] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_BREAK,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[cC][hH][aA][rR] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_CHAR,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[cC][lL][aA][sS][sS] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_CLASS,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[cC][oO][nN][sS][tT] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_CONST,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[cC][oO][nN][tT][iI][nN][uU][eE] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_CONTINUE,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[eE][lL][sS][eE] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_ELSE,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[fF][aA][lL][sS][eE] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_FALSE,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[iI][fF] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_IF,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[iI][nN][tT] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_INT,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[pP][rR][iI][nN][tT] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_PRINT,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[rR][eE][aA][dD] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_READ,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[rR][eE][tT][uU][rR][nN] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_RETURN,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[tT][rR][uU][eE] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_TRUE,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[vV][oO][iI][dD] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_VOID,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[wW][hH][iI][lL][eE] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_WHILE,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[fF][aA][lL][sS][eE] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_FALSE,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+[fF][oO][rR] {
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.rw_FOR,new CSXReservedToken(yytext(),Pos.linenum,Pos.colnum));}
+
+    
+[\"]([^\000-\037\177\"\\]|([\\][\"])|([\\][t])|([\\][n])|([\\][\\]))*[\r]?[\n]  { // runaway String
+				System.out.println("Error: Runaway String (line: " + Integer.toString(Pos.line) + " col: " + Integer.toString(Pos.col) + ")( Text: " + 
+				yytext().replaceAll("[\r\n]", "").toString() + ")");
+                Pos.setpos(); Pos.col = 1; Pos.line += 1;
+                return new Symbol(sym.error, new CSXToken(Pos.linenum,Pos.colnum));}	
+				
+[\"]([^\000-\037\177\"\\]|([\\][\"])|([\\][t])|([\\][n])|([\\][\\]))*[\"]  { // string literal
+                Pos.setpos(); Pos.col += yytext().length();
+				return new Symbol(sym.STRLIT, new CSXStringLitToken(yytext(),Pos.linenum,Pos.colnum));}
+				
+[']([^\000-\037\177'\\]|([\\]+['])|([\\]+[t])|([\\]+[n])|([\\]+[\\]))['] { // character literal
+                Pos.setpos(); Pos.col += yytext().length();
+				return new Symbol(sym.CHARLIT, new CSXCharLitToken(yytext(),Pos.linenum,Pos.colnum));}
+
+[0-1]+(B|b)	{ // integer bit string
+		return new Symbol(sym.INT_BITSTR, new CSXBitStringToken(yytext(),Pos.linenum,Pos.colnum));}
+
+"+"	{Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.PLUS, new CSXToken(Pos.linenum,Pos.colnum));}
+"!=" {Pos.setpos(); Pos.col +=2;
+		return new Symbol(sym.NOTEQ, new CSXToken(Pos.linenum,Pos.colnum));}
+";"	{Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.SEMI,
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"(" {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.LPAREN,
+			new CSXToken(Pos.linenum,Pos.colnum));}
+")" {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.RPAREN, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"[" {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.LBRACKET, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"]" {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.RBRACKET, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"=" {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.ASG, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"-" {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.MINUS, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"*" {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.TIMES, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"/" {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.SLASH, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"==" {Pos.setpos(); Pos.col +=2;
+		return new Symbol(sym.EQ, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"&&" {Pos.setpos(); Pos.col +=2;
+		return new Symbol(sym.CAND, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"||" {Pos.setpos(); Pos.col +=2;
+		return new Symbol(sym.COR, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"<" {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.LT, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+">" {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.GT, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"<=" {Pos.setpos(); Pos.col +=2;
+		return new Symbol(sym.LEQ, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+">=" {Pos.setpos(); Pos.col +=2;
+		return new Symbol(sym.GEQ, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+","  {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.COMMA, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"!"  {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.NOT, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"{"  {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.LBRACE, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"}"  {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.RBRACE, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+":"  {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.COLON, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"++" {Pos.setpos(); Pos.col +=2;
+		return new Symbol(sym.INCREMENT, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"--" {Pos.setpos(); Pos.col +=2;
+		return new Symbol(sym.DECREMENT, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"&"  {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.AND, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+"|"  {Pos.setpos(); Pos.col +=1;
+		return new Symbol(sym.OR, 
+			new CSXToken(Pos.linenum,Pos.colnum));}
+			
+[~]?{Digit}+	{// Integer literal
+		  		Pos.setpos(); Pos.col += yytext().length();
+		  		return new Symbol(sym.INTLIT,	
+		  		new CSXIntLitToken(yytext(), Pos.linenum,Pos.colnum));}
+
+{AnyLet}[a-zA-Z0-9]*    { // Identifiers
+    Pos.setpos(); Pos.col += yytext().length();
+    return new Symbol(sym.IDENTIFIER, new CSXIdentifierToken(yytext(),Pos.linenum,Pos.colnum));}
+    
+\r {/* */}
+
+[^]	{Pos.setpos(); Pos.col += yytext().length(); 
+	System.out.println("Illegal token (" + yytext() + ") ignored.");
+	return new Symbol(sym.error, new CSXToken(Pos.linenum,Pos.colnum));}
+
+
+
+			

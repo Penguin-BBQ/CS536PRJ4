@@ -59,6 +59,6 @@ abstract class Visitor {
 	abstract  void visit(breakNode n);
 	abstract  void visit(continueNode n);
 	abstract  void visit(castNode n);
-
+	abstract  void visit(forNode n);
 
 }  

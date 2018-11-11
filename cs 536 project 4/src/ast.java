@@ -1,9 +1,7 @@
-
 /*  This defines AST classes for CSX
- *  Little of this needs to be changed
- *  This AST definition has been extended from that used in proj 3 to include Type and
- *  Kind information.
- */
+ *  Little, if any, of this needs to be changed
+ * 
+ */ 
 // abstract superclass; only subclasses are actually created  
 abstract class ASTNode {
 
@@ -11,52 +9,95 @@ abstract class ASTNode {
 	public  int	colnum;
 	
 	// Type codes used in CSX
-	 public enum Types { 
-		    Character,
-		    Integer,
-		    Boolean,
-		    Error,
-		    Unknown,
-		    Void
-		   }
+		 public enum Types { 
+			    Character,
+			    Integer,
+			    Boolean,
+			    Error,
+			    Unknown,
+			    Void
+			   }
+		
+		 // Kinds of identifiers found in CSX
+		public enum Kinds {
+				Var,	
+			    Value,
+			    Array,
+			    Method,
+			    ArrayParm,
+			    ScalarParm,
+			    String,
+			    VisibleLabel,
+			    HiddenLabel,
+			    Other
+			   }
 	
-	 // Kinds of identifiers found in CSX
-	public enum Kinds {
-			Var,	
-		    Value,
-		    Array,
-		    Method,
-		    ArrayParm,
-		    ScalarParm,
-		    String,
-		    VisibleLabel,
-		    HiddenLabel,
-		    Other
-		   }
-	 
-
 	ASTNode(){linenum=-1;colnum=-1;}
 	ASTNode(int l,int c){linenum=l;colnum=c;}
 	boolean   isNull(){return false;}; // Is this node null?
 
-    	abstract void accept(Visitor v);// Will be defined in sub-classes    
-				    //  in a subclass
+    abstract void accept(Visitor v);// Will be defined in sub-classes    
+    	
+    // default action on an AST node is to record no declarations and no identifier uses
+   	 void countDeclsAndUses(ScopeInfo currentScope){ 
+   		return;
+   	}
 };
 
 
-// This node is used to root only CSXlite programs 
+
+//This node is used to root only CSXlite programs 
 class csxLiteNode extends ASTNode {
 	
-   	public final fieldDeclsOption	progDecls;
+	public final fieldDeclsOption	progDecls;
 	public final stmtsOption 	progStmts;
+	private ScopeInfo  		 scopeList;
 	
-	csxLiteNode(fieldDeclsOption decls, stmtsOption stmts, int line, int col){  
+	csxLiteNode(fieldDeclsOption decls, stmtsOption stmts, int line, int col){      
 		super(line,col);
 		progDecls=decls;
 		progStmts=stmts;
+		scopeList=null;
 	}; 
 	
+	
 	void accept(Visitor u){ u.visit(this); }
+	
+	// This method begins the count declarations and uses analysis.
+	//  It first creates a ScopeInfo node for the entire program.
+	//  It then passes this ScopeInfo node to the declarations subtree and then
+	//   the statements subtree. Visiting these two subtrees causes all identifier uses and
+	//     declarations to be recognized and recorded in the list rooted by the ScopeInfo node.
+	//  Finally, the information stored in the ScopeInfo list is converted to string form
+	//   and returned to the caller of the analysis.
+	
+	 String countDeclsAndUses(){
+		 scopeList = new ScopeInfo(1,linenum);
+		 progDecls.countDeclsAndUses(scopeList);
+		 progStmts.countDeclsAndUses(scopeList);
+		 return scopeList.toString();
+	 }
+	 
+	/**
+	 * Builds the cross reference information for the CSX Lite program by traversing the scope list
+	 * and obtaining all the information about declarations and usages
+	 * @return A string with all identifier declarations and uses for the program
+	 */
+	String buildCrossReferences(){
+		ReferenceBuilder references = new ReferenceBuilder();
+		countDeclsAndUses(); // Count uses to build the symbol tables
+		
+		// traverse the scopes to collect all the identifier information
+		ScopeInfo tmpScope = scopeList;
+		while (tmpScope != null){
+			references.addIdTable(tmpScope.vars);
+			references.addIllegal(tmpScope.illegal);
+			references.addUndeclared(tmpScope.undeclared);
+			tmpScope = tmpScope.next;
+		}
+		return references.toString();
+	}
+	 
 };
 
 // Root of all ASTs for CSX
@@ -72,14 +113,13 @@ class classNode extends ASTNode {
         }
 
 	void accept(Visitor u){u.visit(this); }
-	boolean isTypeCorrect() {return true;}; // You need to refine this one
-
+		//System.out.println("In classnode accept\n");
 		
 };
 
 class memberDeclsNode extends ASTNode {
 
-        fieldDeclsOption 		fields;
+        fieldDeclsOption 				fields;
         public final methodDeclsOption	methods;
 
         memberDeclsNode(fieldDeclsOption f, methodDeclsOption m,
@@ -112,9 +152,14 @@ class fieldDeclsNode extends fieldDeclsOption {
 		thisField=d;
 		moreFields=f;
 	}
-	
+
 	void accept(Visitor u){ u.visit(this);}
 
+	void countDeclsAndUses(ScopeInfo currentScope){
+		thisField.countDeclsAndUses(currentScope);
+		moreFields.countDeclsAndUses(currentScope);
+		return;
+	}
 };
 
 class nullFieldDeclsNode extends fieldDeclsOption {
@@ -124,6 +169,10 @@ class nullFieldDeclsNode extends fieldDeclsOption {
 	boolean   isNull(){return true;};
 
 	void accept(Visitor u){ u.visit(this);}
+
+	void countDeclsAndUses(ScopeInfo currentScope){
+			return;
+		}
 };
 
 // abstract superclass; only subclasses are actually created
@@ -136,7 +185,7 @@ abstract class declNode extends ASTNode {
 class varDeclNode extends declNode { 
 	
 	public final	identNode	varName;
-	public final	typeNode 	varType;
+	public 			typeNode 	varType;
 	public final	exprNodeOption 	initValue;
 	
 	varDeclNode(identNode id, typeNode t, exprNodeOption e,
@@ -148,7 +197,16 @@ class varDeclNode extends declNode {
 	}
 	
 	void accept(Visitor u){ u.visit(this);}
-
+	
+	// This node represents a variable declaration, so we increment the declarations
+		//  count by 1
+		void countDeclsAndUses(ScopeInfo currentScope){
+			// add declaration to scope's symbol table. If already exists, reset the type to illegal
+			if (!currentScope.addDecl(this)){
+				varType = new illegalTypeNode(linenum, colnum);
+			}
+			return;
+		}
 };
 
 class constDeclNode extends declNode {
@@ -191,21 +249,25 @@ abstract class typeNodeOption extends ASTNode {
 };
 
 abstract class typeNode extends typeNodeOption {
-// abstract superclass; only subclasses are actually created
-    Types   type; // Used for typechecking -- the type of this typeNode
-    
-	typeNode(){super();};
-	typeNode(int l,int c, Types t){super(l,c);type = t;};
-};
+	// abstract superclass; only subclasses are actually created
+	    Types   type; // Used for typechecking -- the type of this typeNode
+	    
+		typeNode(){super();};
+		typeNode(int l,int c, Types t){super(l,c);type = t;};
+	};
 
 class nullTypeNode extends typeNodeOption {
-
+	
 	nullTypeNode(){};
 
 	boolean   isNull(){return true;};
 
 	void accept(Visitor u){ u.visit(this); }
-}
+	
+	public String toString(){
+		return "null";
+	}
+};
 
 
 class intTypeNode extends typeNode {
@@ -214,7 +276,10 @@ class intTypeNode extends typeNode {
 	}
 
 	void accept(Visitor u){ u.visit(this); }
-
+	
+	public String toString(){
+		return "int";
+	}
 };
 
 
@@ -224,25 +289,34 @@ class boolTypeNode extends typeNode {
 	}
 
 	void accept(Visitor u){ u.visit(this); }
+	
+	public String toString(){
+		return "bool";
+	}
+};
 
+class illegalTypeNode extends typeNode {
+	illegalTypeNode(int line, int col){
+		super(line,col, Types.Error);
+	}
+
+	void accept(Visitor u){ u.visit(this); }
 };
 
 class charTypeNode extends typeNode {
         charTypeNode(int line, int col){
-		super(line,col, Types.Character);
-	}
+                super(line,col, Types.Character);
+        }
 
 	void accept(Visitor u) { u.visit(this); }
-
 };
 
 class voidTypeNode extends typeNode {
         voidTypeNode(int line, int col){
-		super(line,col, Types.Void);
+                super(line,col, Types.Void);
         }
 
 	void accept(Visitor u) { u.visit(this); }
-
 };
 
 //abstract superclass; only subclasses are actually created
@@ -280,11 +354,11 @@ class methodDeclNode extends ASTNode {
        
         public final identNode         name;
         public final argDeclsOption    args;
-        public final typeNode	       returnType; // Correction; was typeNodeOption
+        public final typeNodeOption    returnType;
         public final fieldDeclsOption  decls;
-        public final stmtsOption       stmts;
+        public final stmtsOption         stmts;
         
-        methodDeclNode(identNode id, argDeclsOption a, typeNode t,
+        methodDeclNode(identNode id, argDeclsOption a, typeNodeOption t,
                 fieldDeclsOption f, stmtsOption s, int line, int col){
         	super(line,col);
         	name=id;
@@ -371,6 +445,8 @@ class valArgDeclNode extends argDeclNode {
 	void accept(Visitor u) { u.visit(this); }
 };
 
+
+
 //abstract superclass; only subclasses are actually created
 abstract class stmtOption extends ASTNode {
 	stmtOption(){super();};
@@ -388,6 +464,7 @@ class nullStmtNode extends stmtOption {
 	nullStmtNode(){};
 	boolean   isNull(){return true;};
 	void accept(Visitor u){ u.visit(this);}
+	void countDeclsAndUses(ScopeInfo currentScope){return;}
 };
 
 abstract class stmtsOption extends ASTNode{
@@ -408,9 +485,15 @@ class stmtsNode extends stmtsOption {
 		thisStmt=stmt;
 		moreStmts=stmts;
 	};
-
 	
 	void accept(Visitor u){ u.visit(this);}
+	
+	void countDeclsAndUses(ScopeInfo currentScope){
+		 // Count decls and uses in both subtrees:
+			 thisStmt.countDeclsAndUses(currentScope);
+			 moreStmts.countDeclsAndUses(currentScope);
+			}
+
 };
 
 
@@ -420,6 +503,8 @@ class nullStmtsNode extends stmtsOption {
 	boolean   isNull(){return true;};
 
 	void accept(Visitor u){ u.visit(this);}
+	
+	void countDeclsAndUses(ScopeInfo currentScope){return;}
 };
 
 class asgNode extends stmtNode {      
@@ -434,8 +519,14 @@ class asgNode extends stmtNode {
 	};
 	
 	void accept(Visitor u){ u.visit(this);}
+	
+	void countDeclsAndUses(ScopeInfo currentScope){
+		// The target of the assign counts as 1 use
+		currentScope.addUse(target.varName.idname, linenum);
+		// Visit the source expression to include the identifiers in it
+		source.countDeclsAndUses(currentScope);
+		}
 };
-
 
 class incrementNode extends stmtNode {      
 
@@ -448,8 +539,6 @@ class incrementNode extends stmtNode {
 	
 	void accept(Visitor u){ u.visit(this);}
 };
-
-
 class decrementNode extends stmtNode {      
 
 	public final nameNode	target;
@@ -461,6 +550,7 @@ class decrementNode extends stmtNode {
 	
 	void accept(Visitor u){ u.visit(this);}
 };
+
 
 class ifThenNode extends stmtNode {
 	
@@ -479,10 +569,18 @@ class ifThenNode extends stmtNode {
 		super(line,col);
 		condition=e;
 		thenPart=s1;
-		elsePart=stmtNode.NULL; 
+		elsePart=stmtNode.NULL;
 	};
 	
+	
 	void accept(Visitor u){ u.visit(this);}
+	
+	void countDeclsAndUses(ScopeInfo currentScope){
+		// Count identifier uses in control expression and then statement.
+		// In CSX Lite the else statement is always null
+		condition.countDeclsAndUses(currentScope);
+		thenPart.countDeclsAndUses(currentScope);
+		}
 };
 
 class whileNode extends stmtNode {
@@ -499,6 +597,30 @@ class whileNode extends stmtNode {
         }
 
 	void accept(Visitor u) { u.visit(this);}
+};
+
+class forNode extends stmtNode {
+
+    public final exprNodeOption  label;
+    public final stmtOption		 initialization;
+    public final exprNodeOption  condition;
+    public final exprNodeOption	 variableChange;
+    public final boolean		 inc;		 
+    public final stmtNode        loopBody;
+
+    forNode(exprNodeOption i, stmtOption init, exprNodeOption e, exprNodeOption change,
+    		boolean increment, stmtNode s, int line, int col){
+            super(line,col);
+            label=i;
+            initialization=init;
+            condition=e;
+            variableChange=change;
+            inc = increment;
+            loopBody=s;
+    }
+
+void accept(Visitor u) { 
+	u.visit(this);}
 };
 
 abstract class readNodeOption extends stmtNode{
@@ -592,6 +714,7 @@ class returnNode extends stmtNode {
 
 };
 
+
 class blockNode extends stmtNode {
 	
 	public final fieldDeclsOption 	decls;  
@@ -604,6 +727,18 @@ class blockNode extends stmtNode {
 	}
 	
 	 void accept(Visitor u){ u.visit(this);}
+
+	 
+	 void countDeclsAndUses(ScopeInfo currentScope){
+			/* A block opens a new scope, so a new ScopeInfo node is created.
+			   It is appended to the end of the ScopeInfo list.
+			   The new scope is used to record local declarations and uses in the block
+			*/ 
+			 ScopeInfo  localScope = new ScopeInfo(linenum);
+			 ScopeInfo.append(currentScope,localScope);
+			 decls.countDeclsAndUses(localScope);
+			 stmts.countDeclsAndUses(localScope);
+		}
 };
 
 class breakNode extends stmtNode {
@@ -668,10 +803,9 @@ class strLitNode extends exprNode {
         public final String  strval;
 
         strLitNode(String stringval, int line, int col){
-    		super(line,col, ASTNode.Types.Character,
-    				ASTNode.Kinds.String);
-    		strval=stringval;
-    	}
+                super(line,col);
+                strval=stringval;
+        }
 
 	void accept(Visitor u)  { u.visit(this);}
 };
@@ -685,22 +819,22 @@ abstract class exprNodeOption extends ASTNode {
 	static nullExprNode NULL = new nullExprNode();
 };
 
-// abstract superclass; only subclasses are actually created
+//abstract superclass; only subclasses are actually created
 abstract class exprNode extends exprNodeOption {
 	 protected Types   type; // Used for typechecking: the type of this node
-     protected Kinds   kind; // Used for typechecking: the kind of this node
+  protected Kinds   kind; // Used for typechecking: the kind of this node
 
 	exprNode(){super();};
 	exprNode(int l,int c){
-                super(l,c);
+             super(l,c);
 		type=Types.Error;
 		kind=Kinds.Other;
-        };
-        
+     };
+     
 	exprNode(int l,int c,Types t,Kinds k) {
 		super(l,c);
-                type = t; kind = k;
-        };
+             type = t; kind = k;
+     };
 
 };
 
@@ -718,15 +852,20 @@ class binaryOpNode extends exprNode {
 	public final exprNode 	rightOperand;
 	public final int	operatorCode; // Token code of the operator
 	
-	binaryOpNode(exprNode e1, int op, exprNode e2, int line, int col,
-			Types resultType){
-		super(line,col,  resultType, Kinds.Value);
+	binaryOpNode(exprNode e1, int op, exprNode e2, int line, int col){
+		super(line,col);
 		operatorCode=op;
 		leftOperand=e1;
 		rightOperand=e2;
 	};
 
 	void accept(Visitor u){ u.visit(this);}
+
+	// Count identifier uses in left and right operands
+	 void countDeclsAndUses(ScopeInfo currentScope){
+			leftOperand.countDeclsAndUses(currentScope);
+			rightOperand.countDeclsAndUses(currentScope);
+		}
 };
 
 
@@ -768,7 +907,7 @@ class fctCallNode extends exprNode {
                 methodArgs=a;
         }
 
-        void accept(Visitor u) { u.visit(this);}
+	void accept(Visitor u) { u.visit(this);}
 };
 
 
@@ -795,46 +934,52 @@ class identNode extends exprNode {
 	static identNode NULL = new identNode(true);
 
 	void accept(Visitor u){ u.visit(this);}
-
+	
+	//One identifier used here:
+	void countDeclsAndUses(ScopeInfo currentScope){
+		currentScope.addUse(idname, linenum);
+	}
 };
 
 class nameNode extends exprNode {
 
-        public final identNode     		varName;
+        public final identNode    	  		varName;
         public final exprNodeOption       	subscriptVal;
 
-       	nameNode(identNode id, exprNodeOption expr, int line, int col){
-		super(line,col,Types.Unknown, Kinds.Var);
-		varName=id;
-		subscriptVal=expr;
-	};
+        nameNode(identNode id, exprNodeOption expr, int line, int col){
+                super(line,col);
+                varName=id;
+                subscriptVal=expr;
+        };
 
         nameNode(identNode id, int line, int col){
-		super(line,col,Types.Unknown, Kinds.Var);
+                super(line,col);
                 varName=id;
                 subscriptVal=exprNode.NULL;
         };
 
-        void accept(Visitor u){ u.visit(this);}
+	void accept(Visitor u){ u.visit(this);}
 
 };
 
+
+
+
 class intLitNode extends exprNode {
 	public final int 	intval;
-		intLitNode(int val, int line, int col){
-		super(line,col,Types.Integer, Kinds.Value);
-		intval   = val;
+	intLitNode(int val, int line, int col){
+		super(line,col);
+		intval=val;
 	}
 
 	void accept(Visitor u){ u.visit(this);}
-	
 };
 
 class bitStringNode extends exprNode {
 	public final int 	intValue;
 	public final String 	bitString;
 	bitStringNode(int val, String bitStr, int line, int col){
-		super(line,col,Types.Integer, Kinds.Value);
+		super(line,col);
 		intValue=val;
 		bitString=bitStr;
 	}
@@ -842,33 +987,33 @@ class bitStringNode extends exprNode {
 	void accept(Visitor u){ u.visit(this);}
 };
 
-
 class charLitNode extends exprNode {
 
         public final char    charval;
 
         charLitNode(char val, int line, int col){
-		super(line,col,Types.Character, Kinds.Value);
+                super(line,col);
                  charval=val;
-        }
-
-        void accept(Visitor u) { u.visit(this);}
-};
-
-
-class trueNode extends exprNode {
-        trueNode(int line, int col){
-		super(line,col,Types.Boolean, Kinds.Value);
         }
 
 	void accept(Visitor u) { u.visit(this);}
 };
 
-class falseNode extends exprNode {
-        falseNode(int line, int col){
-		super(line,col,Types.Boolean, Kinds.Value);
+
+class trueNode extends exprNode {
+        trueNode(int line, int col){
+                super(line,col);
         }
 
-        void accept(Visitor u) { u.visit(this);}
+	void accept(Visitor u) { u.visit(this);}
+};
+
+
+class falseNode extends exprNode {
+        falseNode(int line, int col){
+                super(line,col);
+        }
+
+	void accept(Visitor u) { u.visit(this);}
 };
 

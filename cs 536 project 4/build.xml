@@ -1,4 +1,4 @@
-<!-- This buildfile is for cs536 (fall 2013) project #4
+<!-- This buildfile is for cs536 (fall 2013) project #3
 
       It supports the following targets:
       
@@ -17,13 +17,9 @@
       (4) clean
           "Clean up" by removing all .class files. Used in preparation
           for a full recompilation.
-
-      (5) all
-          Do clean, then test
  -->
-   
 
-<project default="compile">
+	<project default="compile">
 
  <target name ="compile" depends="JLex,Cup,AST">
    <mkdir dir="bin">
@@ -33,100 +29,85 @@
    </javac>
  </target>
 
- <target name ="clean">
-   <delete dir="bin">
-   </delete>
-   <delete>
-    <fileset dir="." includes="src/*.jlex.java"/>
-    <fileset dir="." includes="src/parser.java"/>
-   </delete>
- </target>
+		<target name ="clean">
+		   <delete dir="bin">
+		   </delete>
+		   <delete>
+		    <fileset dir="." includes="src/*.jlex.java"/>
+		    <fileset dir="." includes="src/parser.java"/>
+		   </delete>
+		 </target>
 
  <target name ="test" depends="compile">
-    <echo message="------------------------------">
-     </echo>
-    <echo message=" test1.lite">
-     </echo>
-    <echo message="------------------------------">
-     </echo>
-   <java classpath="bin;." classname="P4" fork="true" >
-    <arg value="test1.lite">
+ 	<echo message="------- test using test.lite ----------">
+ 	     </echo>
+   <java classpath="bin;." classname="P3" fork="true" >
+    <arg value="test.lite">
     </arg>
    </java>
-    <echo message="------------------------------">
-     </echo>
-    <echo message=" test2.lite">
-     </echo>
-    <echo message="------------------------------">
-     </echo>
-   <java classpath="bin;." classname="P4" fork="true" >
-    <arg value="test2.lite">
-    </arg>
-   </java>
-    <echo message="------------------------------">
-     </echo>
-    <echo message=" test3.lite">
-     </echo>
-    <echo message="------------------------------">
-     </echo>
-   <java classpath="bin;." classname="P4" fork="true" >
-    <arg value="test3.lite">
-    </arg>
-   </java>
+ 	<echo message="------- test using biggertest.lite ----------">
+ 	 	     </echo>
+ 	   <java classpath="bin;." classname="P3" fork="true" >
+ 	    <arg value="biggertest.lite">
+ 	    </arg>
+ 	   </java>
  </target>
-
 		
  <target name ="test1" depends="compile">
 		 	
-	 <java classpath="bin;." classname="P4" fork="true" > 
+	 <java classpath="bin;." classname="P3" fork="true" > 
 	 </java>
 		 	
 </target>
+		
+		<target name ="checkJLexNeeded" >
+		   <uptodate property="JLexnotNeeded" targetfile="src/csx.jlex.java" 
+		      srcfile="csx.jlex" >
+		   </uptodate>
+		 </target>
+ 
 
- <target name ="checkJLexNeeded" >
-   <uptodate property="JLexnotNeeded" targetfile="src/lite.jlex.java" 
-      srcfile="lite.jlex" >
-   </uptodate>
- </target>
+		 <target name ="JLex" depends="checkJLexNeeded" unless="JLexnotNeeded">
+		   <mkdir dir="bin">
+		   </mkdir>
+		   <java  classpath="." classname="JLex.Main" fork="true" > 
+		    <arg value="./csx.jlex">
+		    </arg>
+		   </java>
+		    <move file="csx.jlex.java" todir="src">
+		    </move>
+		    <javac  includeantruntime="false" srcdir="src" destdir="bin"
+		            classpath="."  includes="csx.jlex.java" debug="on">
+		     </javac>
+		 </target>
 
- <target name ="JLex" depends="checkJLexNeeded" unless="JLexnotNeeded">
-   <mkdir dir="bin">
-   </mkdir>
-   <java  classpath="." classname="JLex.Main" fork="true" > 
-    <arg value="./lite.jlex">
-    </arg>
-   </java>
-    <move file="lite.jlex.java" todir="src">
-    </move>
-    <javac  includeantruntime="false" srcdir="src" destdir="bin"
-            classpath="."  includes="lite.jlex.java" debug="on">
-     </javac>
- </target>
+		 <target name ="checkCupNeeded" >
+		   <uptodate property="CupnotNeeded" targetfile="src/parser.java" 
+		      srcfile="csx.cup" >
+		   </uptodate>
+		 </target>
 
- <target name ="checkCupNeeded" >
-   <uptodate property="CupnotNeeded" targetfile="src/parser.java" 
-      srcfile="lite.cup" >
-   </uptodate>
- </target>
+		 <target name ="Cup" depends="checkCupNeeded" unless="CupnotNeeded">
+		   <mkdir dir="bin">
+		   </mkdir>
+		   <java  classpath="src;bin;." classname="java_cup.Main" fork="true" input="csx.cup" >
+		   <arg value = "-expect"/>
+		   <arg value = "1"/>
+		   </java>
+		    <move file="parser.java" todir="src">
+		    </move>
+		    <move file="sym.java" todir="src">
+		    </move>
+		     <javac  includeantruntime="false" srcdir="src" destdir="bin"
+		            classpath="."  includes="sym.java" debug="on">
+		     </javac>
+		   
+		 </target>
 
- <target name ="Cup" depends="checkCupNeeded" unless="CupnotNeeded">
-   <mkdir dir="bin">
-   </mkdir>
-   <java  classpath="src;bin;." classname="java_cup.Main" fork="true" input="lite.cup" > 
-   </java>
-    <move file="parser.java" todir="src">
-    </move>
-    <move file="sym.java" todir="src">
-    </move>
-     <javac  includeantruntime="false" srcdir="src" destdir="bin"
-            classpath="."  includes="sym.java" debug="on">
-     </javac>
-   
- </target>
 
 
  <target name ="checkASTNeeded" >
-   <uptodate property="ASTnotNeeded" targetfile="bin/nullNode.class" 
+   <uptodate property="ASTnotNeeded" targetfile="bin/nullTypeNode.class" 
       srcfile= "src/ast.java" >
    </uptodate>
  </target>
@@ -139,9 +120,6 @@
      </javac>
  </target>
 
-
- <target name ="all" depends=" clean, test">
- </target>
 
 
 </project>
