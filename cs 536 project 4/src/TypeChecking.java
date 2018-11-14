@@ -220,6 +220,7 @@ public class TypeChecking extends Visitor {
 			 typeMustBeIn(n.outputValue.type, types,
 					error(n) + "Only int values may be printed in CSX-lite.");
 		 }
+		 this.visit(n.morePrints);
 	  }
 	  
 	  void visit(blockNode n){
@@ -408,7 +409,14 @@ public class TypeChecking extends Visitor {
 
 	  
 	  void visit(readNode n){
-		System.out.println("Type checking for readNode not yet implemented");
+		 this.visit(n.targetVar);
+		 String errorMsg = error(n) + "Only int, and char values may be read";
+		 LinkedList<ASTNode.Types> types = new LinkedList<ASTNode.Types>();
+		 types.add(ASTNode.Types.Integer);
+		 types.add(ASTNode.Types.Character);
+		 typeMustBeIn(n.targetVar.type, types,
+				error(n) + "Only int values may be printed in CSX-lite.");
+		 this.visit(n.moreReads);
 	  }
 	  
 
@@ -432,6 +440,7 @@ public class TypeChecking extends Visitor {
 	  }
 
 	  void visit(unaryOpNode n){
+		  this.visit(n.operand);
 		  if (n.operand.type == ASTNode.Types.Integer){
 			  n.type = ASTNode.Types.Integer;
 		  }
