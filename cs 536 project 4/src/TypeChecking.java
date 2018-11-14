@@ -411,7 +411,18 @@ public class TypeChecking extends Visitor {
 	  }
 
 	  void visit(unaryOpNode n){
-		System.out.println("Type checking for unaryOpNode not yet implemented");
+		  if (n.operand.type == ASTNode.Types.Integer){
+			  n.type = ASTNode.Types.Integer;
+		  }
+		  else if(n.operand.type == ASTNode.Types.Boolean){
+			  n.type = ASTNode.Types.Boolean;
+		  }
+		  else{
+			String errorMsg = error(n) + "Operand of" + opToString(n.operatorCode) 
+	        	+  "must be an int or a char.";
+			System.out.println(errorMsg);
+  			typeErrors++;
+		  }
 	  }
 
 	
