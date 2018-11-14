@@ -19,7 +19,8 @@ public class TypeChecking extends Visitor {
 	}
 	
 	boolean isScalar(ASTNode.Kinds kind){
-		return (kind == ASTNode.Kinds.Var || kind == ASTNode.Kinds.Value);
+		return (kind == ASTNode.Kinds.Var || kind == ASTNode.Kinds.Value
+				|| kind == ASTNode.Kinds.ScalarParm);
 	}
 	
 	boolean isTypeCorrect(csxLiteNode n) {
