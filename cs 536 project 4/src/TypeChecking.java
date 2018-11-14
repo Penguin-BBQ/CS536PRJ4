@@ -335,11 +335,19 @@ public class TypeChecking extends Visitor {
 		System.out.println("Type checking for methodDeclNode not yet implemented");
 	 }
 	 void visit(incrementNode n){
-			System.out.println("Type checking for incrementNode not yet implemented");
-		 }
+			LinkedList<ASTNode.Types> types = new LinkedList<ASTNode.Types>();
+			types.add(ASTNode.Types.Integer);
+			types.add(ASTNode.Types.Character);
+			typeMustBeIn(n.target.type, types,
+                	error(n) + "Target of increment must be an int or a char.");
+	 }
 	 void visit(decrementNode n){
-			System.out.println("Type checking for decrementNode not yet implemented");
-		 }
+		 LinkedList<ASTNode.Types> types = new LinkedList<ASTNode.Types>();
+			types.add(ASTNode.Types.Integer);
+			types.add(ASTNode.Types.Character);
+			typeMustBeIn(n.target.type, types,
+             	error(n) + "Target of decrement must be an int or a char.");
+	 }
 	void visit(argDeclsNode n){
 		System.out.println("Type checking for argDeclsNode not yet implemented");
 	}
