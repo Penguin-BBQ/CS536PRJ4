@@ -18,6 +18,9 @@ public class TypeChecking extends Visitor {
 		st = new SymbolTable();
 	}
 	
+	boolean isScalar(ASTNode.Kinds kind){
+		return (kind == ASTNode.Kinds.Var || kind == ASTNode.Kinds.Value);
+	}
 	
 	boolean isTypeCorrect(csxLiteNode n) {
         	this.visit(n);
