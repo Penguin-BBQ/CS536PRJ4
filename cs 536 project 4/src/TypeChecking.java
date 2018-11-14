@@ -182,15 +182,22 @@ public class TypeChecking extends Visitor {
 	}
 
 	void visit(asgNode n){
-	;
 		this.visit(n.target);
 		this.visit(n.source);
         	assertCondition(n.target.kind == ASTNode.Kinds.Var); //In CSX-lite all IDs should be vars! 
-
-		typesMustBeEqual(n.source.type, n.target.type,
-                        error(n) + "Both the left and right"
-                          	+ " hand sides of an assignment must "
-                            	+ "have the same type.");
+        if (n.target.type == ASTNode.Types.Character && n.target.kind == ASTNode.Kinds.Array
+        		&& n.source.kind == ASTNode.Kinds.String){
+        	//verify array length same as string
+        }
+        else{
+        	typesMustBeEqual(n.source.type, n.target.type,
+                    error(n) + "Both the left and right"
+                      	+ " hand sides of an assignment must "
+                        	+ "have the same type.");
+        	if(n.target.kind == ASTNode.Kinds.Array && n.source.kind == ASTNode.Kinds.Array){
+        		//verify each array has the same length
+        	}
+        }
 	}
 
 // Extend ifThenNode's method to handle else parts
