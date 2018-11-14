@@ -205,9 +205,21 @@ public class TypeChecking extends Visitor {
 	}
 	  
 	 void visit(printNode n){
-		this.visit(n.outputValue);
-        	typeMustBe(n.outputValue.type, ASTNode.Types.Integer,
-                	error(n) + "Only int values may be printed in CSX-lite.");
+		 this.visit(n.outputValue);
+		 String errorMsg = error(n) + "Only int, bool, char, char arrays, and string literal"
+		 		+ " values may be printed in CSX.";
+		 if (n.outputValue.kind == ASTNode.Kinds.Array){
+			 typeMustBe(n.outputValue.type, ASTNode.Types.Character, errorMsg);
+		 }
+		 else if (n.outputValue.kind == ASTNode.Kinds.String){}
+		 else{
+			 LinkedList<ASTNode.Types> types = new LinkedList<ASTNode.Types>();
+			 types.add(ASTNode.Types.Integer);
+			 types.add(ASTNode.Types.Character);
+			 types.add(ASTNode.Types.Boolean);
+			 typeMustBeIn(n.outputValue.type, types,
+					error(n) + "Only int values may be printed in CSX-lite.");
+		 }
 	  }
 	  
 	  void visit(blockNode n){
