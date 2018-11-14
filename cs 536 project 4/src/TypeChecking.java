@@ -1,3 +1,5 @@
+import java.util.*;
+
 // The following methods type check  AST nodes used in CSX Lite
 //  You will need to complete the methods after line 238 to type check the
 //   rest of CSX
@@ -13,8 +15,9 @@ public class TypeChecking extends Visitor {
 	
 	TypeChecking(){
 		typeErrors = 0;
-		st = new SymbolTable(); 
+		st = new SymbolTable();
 	}
+	
 	
 	boolean isTypeCorrect(csxLiteNode n) {
         	this.visit(n);
@@ -43,6 +46,18 @@ public class TypeChecking extends Visitor {
                         typeErrors++;
                 }
         }
+	 void typeMustBeIn(ASTNode.Types testType,LinkedList<ASTNode.Types> requiredTypes,String errorMsg) {
+		 if (testType == ASTNode.Types.Error){
+			 return;
+		 }
+		 for (ASTNode.Types type : requiredTypes ){
+			 if (testType == type){
+				 return;
+			 }
+		 }
+		 System.out.println(errorMsg);
+     	 typeErrors++;
+     }
 	String error(ASTNode n) {
 		return "Error (line " + n.linenum + "): ";
         }
@@ -106,7 +121,7 @@ public class TypeChecking extends Visitor {
 
 // Extend varDeclNode's method to handle initialization
 	void visit(varDeclNode n){
-
+		
 		SymbolInfo     id;
  //       	id = (SymbolInfo) st.localLookup(n.varName.idname);
         	id = (SymbolInfo) st.localLookup(n.varName.idname);
@@ -205,25 +220,79 @@ public class TypeChecking extends Visitor {
 	
 	  void visit(binaryOpNode n){
 		  
-		//Only four bin ops in CSX-lite
 		assertCondition(n.operatorCode== sym.PLUS||n.operatorCode==sym.MINUS 
-        			|| n.operatorCode== sym.EQ||n.operatorCode==sym.NOTEQ);
+        			|| n.operatorCode== sym.EQ||n.operatorCode==sym.NOTEQ
+        			|| n.operatorCode== sym.COR||n.operatorCode==sym.CAND
+        			|| n.operatorCode== sym.OR||n.operatorCode==sym.AND
+        			|| n.operatorCode== sym.LT||n.operatorCode==sym.GT
+        			|| n.operatorCode== sym.LEQ||n.operatorCode==sym.LEQ
+        			|| n.operatorCode== sym.GEQ||n.operatorCode==sym.TIMES
+        			|| n.operatorCode== sym.SLASH);
 		this.visit(n.leftOperand);
 		this.visit(n.rightOperand);
-        	if (n.operatorCode== sym.PLUS||n.operatorCode==sym.MINUS){
+        	if (n.operatorCode== sym.PLUS||n.operatorCode==sym.MINUS
+        			||n.operatorCode== sym.TIMES||n.operatorCode==sym.SLASH){
         		n.type = ASTNode.Types.Integer;
-        		typeMustBe(n.leftOperand.type, ASTNode.Types.Integer,
+        		LinkedList<ASTNode.Types> opTypes = new LinkedList<ASTNode.Types>();
+        		opTypes.add(ASTNode.Types.Integer);
+        		opTypes.add(ASTNode.Types.Character);
+        		typeMustBeIn(n.leftOperand.type, opTypes,
                 	error(n) + "Left operand of" + opToString(n.operatorCode) 
-                         	+  "must be an int.");
-        		typeMustBe(n.rightOperand.type, ASTNode.Types.Integer,
+                         	+  "must be an int or a char.");
+        		typeMustBeIn(n.rightOperand.type, opTypes,
                 	error(n) + "Right operand of" + opToString(n.operatorCode) 
-                         	+  "must be an int.");
-        	} else { // Must be a comparison operator
+                         	+  "must be an int or a char.");
+        	}
+        	else if(n.operatorCode == sym.OR || n.operatorCode == sym.AND){
+        		if (n.leftOperand.type == ASTNode.Types.Integer){
+        			typeMustBe(n.rightOperand.type, ASTNode.Types.Integer,
+        					error(n) + "Both operands of" + opToString(n.operatorCode)
+        					+ "must have the same type.");
+        		}
+        		else if(n.leftOperand.type == ASTNode.Types.Boolean){
+        			typeMustBe(n.rightOperand.type, ASTNode.Types.Boolean,
+        					error(n) + "Both operands of" + opToString(n.operatorCode)
+        					+ "must have the same type.");
+        		}
+        		else{
+        			String errorMsg = error(n) + "Left operand of" + opToString(n.operatorCode)
+        					+ "must be an int or a bool";
+        			System.out.println(errorMsg);
+        	     	typeErrors++;
+        		}
+        	}
+        	else if(n.operatorCode == sym.COR || n.operatorCode == sym.CAND){
+        		String errorMsg = error(n)+"Both operands of"+
+                           opToString(n.operatorCode)+"must have the same type.";
+        		if (n.leftOperand.type == ASTNode.Types.Integer){
+        			n.type = ASTNode.Types.Integer;
+        			typesMustBeEqual(n.leftOperand.type,n.rightOperand.type,errorMsg);
+        		}
+        		else if (n.leftOperand.type == ASTNode.Types.Boolean){
+        			n.type = ASTNode.Types.Boolean;
+        			typesMustBeEqual(n.leftOperand.type,n.rightOperand.type,errorMsg);
+        		}
+        		else{
+        			errorMsg = error(n) + "Left operand of" + opToString(n.operatorCode)
+					+ "must be an int or a bool";
+        			System.out.println(errorMsg);
+        			typeErrors++;
+        		}		
+        	}
+        	else { // Must be a comparison operator
         		n.type = ASTNode.Types.Boolean;
         		String errorMsg = error(n)+"Both operands of"+
                            opToString(n.operatorCode)+"must have the same type.";
-        		typesMustBeEqual(n.leftOperand.type,n.rightOperand.type,errorMsg);
-        		
+        		if (n.leftOperand.type != ASTNode.Types.Integer || 
+        				n.leftOperand.type != ASTNode.Types.Boolean){
+        			errorMsg = error(n) + "Left operand of" + opToString(n.operatorCode)
+					+ "must be an int or a bool";
+        			System.out.println(errorMsg);
+        			typeErrors++;
+        		}
+        		else{
+        			typesMustBeEqual(n.leftOperand.type,n.rightOperand.type,errorMsg);
+        		}
         	}
 	  }
 
