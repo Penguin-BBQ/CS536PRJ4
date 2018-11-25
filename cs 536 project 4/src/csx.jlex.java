@@ -9,7 +9,7 @@ class CSXToken {
 class CSXReservedToken extends CSXToken {
 	String reservedText;
 	CSXReservedToken(String text,int line,int col){
-		super(line,col); reservedText=text;};
+		super(line,col); reservedText=text;}; 
 }
 class CSXBitStringToken extends CSXToken {
 	int intValue;

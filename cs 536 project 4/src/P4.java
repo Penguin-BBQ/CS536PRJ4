@@ -49,7 +49,7 @@ public class P4 {
     boolean    ok;
     TypeChecking typeCheck = new TypeChecking();
     
-    ok = typeCheck.isTypeCorrect((csxLiteNode) root.value);
+    ok = typeCheck.isTypeCorrect((classNode) root.value);
     
     if (ok) 
             System.out.println("No CSX type errors detected.");

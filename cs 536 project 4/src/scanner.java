@@ -7,7 +7,7 @@ class Scanner {
 
 	public static void init(java.io.FileInputStream yyin){
 		if (lex == null)
-			lex = new Yylex(yyin);
+			lex = new Yylex(yyin); 
 		else 	System.err.println("Scanner is already initialized.");
 	}
 
