@@ -127,27 +127,31 @@ public class TypeChecking extends Visitor {
 	void visit(varDeclNode n){
 		
 		SymbolInfo     id;
- //       	id = (SymbolInfo) st.localLookup(n.varName.idname);
-        	id = (SymbolInfo) st.localLookup(n.varName.idname);
-        	if (id != null) {
-               		 System.out.println(error(n) + id.name()+
-                                     " is already declared.");
-                	typeErrors++;
-                	n.varName.type = ASTNode.Types.Error;
+    	id = (SymbolInfo) st.localLookup(n.varName.idname);
+    	if (id != null) {
+           		 System.out.println(error(n) + id.name()+
+                                 " is already declared.");
+            	typeErrors++;
+            	n.varName.type = ASTNode.Types.Error;
 
-        	} else {
-                	id = new SymbolInfo(n.varName.idname,
-                                         ASTNode.Kinds.Var, n.varType.type);
-                	n.varName.type = n.varType.type;
-			try {
-                		st.insert(id);
-			} catch (DuplicateException d) 
-                              { /* can't happen */ }
-			  catch (EmptySTException e) 
-                              { /* can't happen */ }
-                	n.varName.idinfo=id;
-        	}
-
+    	} else {
+            	id = new SymbolInfo(n.varName.idname,
+                                     ASTNode.Kinds.Var, n.varType.type);
+            	n.varName.type = n.varType.type;
+		try {
+            		st.insert(id);
+		} catch (DuplicateException d) 
+                          { /* can't happen */ }
+		  catch (EmptySTException e) 
+                          { /* can't happen */ }
+            	n.varName.idinfo=id;
+    	}
+    	
+    	// check that types are the same
+    	if (n.varType.type != ((exprNode) n.initValue).type) {
+    		System.out.println(error(n) + "can only initialize a variable to the same type");
+    	}
+        
 	};
 	
 	void visit(nullTypeNode n){}
