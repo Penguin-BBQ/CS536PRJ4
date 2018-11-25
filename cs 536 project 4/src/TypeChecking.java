@@ -331,16 +331,23 @@ public class TypeChecking extends Visitor {
 // Extend these unparsing methods to correctly unparse CSX AST nodes
 	 
 	 void visit(classNode n){
-		System.out.println("Type checking for classNode not yet implemented");
+		 st.openScope();
+		 this.visit(n.className);
+		 this.visit(n.members);
+		 System.out.println("Type checking for valArgDeclNode not yet implemented");
 		}
 
 	 void  visit(memberDeclsNode n){
-		System.out.println("Type checking for memberDeclsNode not yet implemented");
+		 this.visit(n.fields);
+		 this.visit(n.methods);
+		 System.out.println("Type checking for valArgDeclNode not yet implemented");
 	 }
 	 
 	 void  visit(methodDeclsNode n){
-		System.out.println("Type checking for methodDeclsNode not yet implemented");
-		 }
+		 this.visit(n.thisDecl);
+		 this.visit(n.moreDecls);
+		 System.out.println("Type checking for valArgDeclNode not yet implemented");
+	 }
 	 
 	 void visit(nullStmtNode n){}
 	 
@@ -353,8 +360,15 @@ public class TypeChecking extends Visitor {
 	 void visit(nullMethodDeclsNode n){}
 
 	 void visit(methodDeclNode n){
-		System.out.println("Type checking for methodDeclNode not yet implemented");
+		 st.openScope();
+		 this.visit(n.name);
+		 this.visit(n.args);
+		 this.visit(n.returnType);
+		 this.visit(n.decls);
+		 this.visit(n.stmts);
+		 System.out.println("Type checking for valArgDeclNode not yet implemented");
 	 }
+	 
 	 void visit(incrementNode n){
 			LinkedList<ASTNode.Types> types = new LinkedList<ASTNode.Types>();
 			types.add(ASTNode.Types.Integer);
@@ -370,21 +384,29 @@ public class TypeChecking extends Visitor {
              	error(n) + "Target of decrement must be an int or a char.");
 	 }
 	void visit(argDeclsNode n){
-		System.out.println("Type checking for argDeclsNode not yet implemented");
+		this.visit(n.thisDecl);
+		this.visit(n.moreDecls);
+		System.out.println("Type checking for valArgDeclNode not yet implemented");
 	}
 
 	void visit(nullArgDeclsNode n){}
 
 	
 	void visit(valArgDeclNode n){
+		this.visit(n.argName);
+		this.visit(n.argType);
 		System.out.println("Type checking for valArgDeclNode not yet implemented");
 	}
 	
 	void visit(arrayArgDeclNode n){
+		this.visit(n.argName);
+		this.visit(n.elementType);
 		System.out.println("Type checking for arrayArgDeclNode not yet implemented");
 	}
 	
 	void visit(constDeclNode n){
+		this.visit(n.constName);
+		this.visit(n.constValue);
 		System.out.println("Type checking for constDeclNode not yet implemented");
 	 }
 	 
@@ -402,17 +424,24 @@ public class TypeChecking extends Visitor {
 	}
 
 	void visit(whileNode n){
+		this.visit(n.label);
+		this.visit(n.condition);
+		this.visit(n.loopBody);
 		System.out.println("Type checking for whileNode not yet implemented");
 	  }
 
 	void visit(breakNode n){
+		this.visit(n.label);
 		System.out.println("Type checking for breakNode not yet implemented");
 	}
 	void visit(continueNode n){
+		this.visit(n.label);
 		System.out.println("Type checking for continueNode not yet implemented");
 	}
 	  
 	void visit(callNode n){
+		this.visit(n.methodName);
+		this.visit(n.args);
 		System.out.println("Type checking for callNode not yet implemented");
 	}
 
@@ -429,21 +458,28 @@ public class TypeChecking extends Visitor {
 	  
 
 	  void visit(returnNode n){
+		  this.visit(n.returnVal);
 		System.out.println("Type checking for returnNode not yet implemented");
 	  }
 
 	  
 	  void visit(argsNode n){
+		  this.visit(n.argVal);
+		  this.visit(n.moreArgs);
 		System.out.println("Type checking for argsNode not yet implemented");
 	  }
 	  	
 	  void visit(nullArgsNode n){}
 		
 	  void visit(castNode n){
+		  this.visit(n.operand);
+		  this.visit(n.resultType);
 		System.out.println("Type checking for castNode not yet implemented");
 	  }
 
 	  void visit(fctCallNode n){
+		  this.visit(n.methodName);
+		  this.visit(n.methodArgs);
 		System.out.println("Type checking for fctCallNode not yet implemented");
 	  }
 
