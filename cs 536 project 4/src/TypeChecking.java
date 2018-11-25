@@ -389,7 +389,9 @@ public class TypeChecking extends Visitor {
 	 }
 	 
 	 void visit(arrayDeclNode n){
-		System.out.println("Type checking for arrayDeclNode not yet implemented");
+		if (n.arraySize.intval <= 0) {
+			System.out.println(error(n) + "The size of an array in a declaration must be greater than 0.");
+		}
 	 }
 	
 	void visit(charTypeNode n){
@@ -421,8 +423,7 @@ public class TypeChecking extends Visitor {
 		 LinkedList<ASTNode.Types> types = new LinkedList<ASTNode.Types>();
 		 types.add(ASTNode.Types.Integer);
 		 types.add(ASTNode.Types.Character);
-		 typeMustBeIn(n.targetVar.type, types,
-				error(n) + "Only int values may be printed in CSX-lite.");
+		 typeMustBeIn(n.targetVar.type, types, errorMsg);
 		 this.visit(n.moreReads);
 	  }
 	  
