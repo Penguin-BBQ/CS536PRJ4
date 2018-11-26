@@ -139,10 +139,6 @@ public class TypeChecking extends Visitor {
                                      ASTNode.Kinds.Var, n.varType.type);
             	n.varName.type = n.varType.type;
             	
-            	this.visit(n.varName);
-            	this.visit(n.varType);
-            	this.visit(n.initValue);
-            	
             	// check that types are the same
             	if (n.varType.type != ((exprNode) n.initValue).type) {
             		typeErrors++;
@@ -341,7 +337,6 @@ public class TypeChecking extends Visitor {
 	 
 	 void visit(classNode n){
 		 st.openScope();
-		 this.visit(n.className);
 		 this.visit(n.members);
 		 System.out.println("Type checking for valArgDeclNode not yet implemented");
 		}
@@ -414,14 +409,32 @@ public class TypeChecking extends Visitor {
 	}
 	
 	void visit(constDeclNode n){
-		this.visit(n.constName);
-		this.visit(n.constValue);
-		System.out.println("Type checking for constDeclNode not yet implemented");
+		SymbolInfo     id;
+    	id = (SymbolInfo) st.localLookup(n.constName.idname);
+    	if (id != null) {
+           		 System.out.println(error(n) + id.name()+
+                                 " is already declared.");
+            	typeErrors++;
+            	n.constName.type = ASTNode.Types.Error;
+
+    	} else {
+            	id = new SymbolInfo(n.constName.idname,
+                                     ASTNode.Kinds.Var, n.constValue.type);
+            	n.constName.type = n.constValue.type;
+		try {
+            		st.insert(id);
+		} catch (DuplicateException d) 
+                          { /* can't happen */ }
+		  catch (EmptySTException e) 
+                          { /* can't happen */ }
+            	n.constName.idinfo=id;
+    	}	
 	 }
 	 
 	 void visit(arrayDeclNode n){
 		if (n.arraySize.intval <= 0) {
-			System.out.println(error(n) + "The size of an array in a declaration must be greater than 0.");
+			typeErrors++;
+			System.out.println(error(n) + n.arrayName.idname + " must have more than 0 elements.");
 		}
 	 }
 	
