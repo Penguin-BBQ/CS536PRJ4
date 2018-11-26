@@ -243,7 +243,6 @@ public class TypeChecking extends Visitor {
 
 	void visit(asgNode n){
 		this.visit(n.target);
-		this.visit(n.source);
         if (n.target.type == ASTNode.Types.Character && n.target.kind == ASTNode.Kinds.Array
         		&& n.source.kind == ASTNode.Kinds.String){
         	//verify array length same as string
