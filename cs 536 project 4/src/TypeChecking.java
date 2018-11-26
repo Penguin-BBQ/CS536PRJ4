@@ -76,6 +76,28 @@ public class TypeChecking extends Visitor {
 				return(" == ");
 			case sym.NOTEQ:
 				return(" != ");
+			case sym.COR:
+				return(" || ");
+			case sym.CAND:
+				return(" && ");
+			case sym.OR:
+				return(" | ");
+			case sym.AND:
+				return(" & ");
+			case sym.LT:
+				return(" < ");
+			case sym.GT:
+				return(" > ");
+			case sym.LEQ:
+				return(" <= ");
+			case sym.GEQ:
+				return(" >= ");
+			case sym.TIMES:
+				return(" * ");
+			case sym.SLASH:
+				return(" / ");
+			case sym.NOT:
+				return(" ! ");
 			default:
 				assertCondition(false);
 				return "";
@@ -97,6 +119,39 @@ public class TypeChecking extends Visitor {
 				break;
 			case sym.NOTEQ:
 				System.out.print(" != ");
+				break;
+			case sym.COR:
+				System.out.print(" || ");
+				break;
+			case sym.CAND:
+				System.out.print(" && ");
+				break;
+			case sym.OR:
+				System.out.print(" | ");
+				break;
+			case sym.AND:
+				System.out.print(" & ");
+				break;
+			case sym.LT:
+				System.out.print(" < ");
+				break;
+			case sym.GT:
+				System.out.print(" > ");
+				break;
+			case sym.LEQ:
+				System.out.print(" <= ");
+				break;
+			case sym.GEQ:
+				System.out.print(" >= ");
+				break;
+			case sym.TIMES:
+				System.out.print(" * ");
+				break;
+			case sym.SLASH:
+				System.out.print(" / ");
+				break;
+			case sym.NOT:
+				System.out.print(" ! ");
 				break;
 			default:
 				throw new Error();
@@ -140,7 +195,7 @@ public class TypeChecking extends Visitor {
             	n.varName.type = n.varType.type;
             	
             	// check that types are the same
-            	if (n.varType.type != ((exprNode) n.initValue).type) {
+            	if (!n.initValue.isNull() && (n.varType.type != ((exprNode) n.initValue).type)) {
             		typeErrors++;
             		System.out.println(error(n) + "The initializer must be of type " + n.varType.type);
             	}
@@ -189,7 +244,6 @@ public class TypeChecking extends Visitor {
 	void visit(asgNode n){
 		this.visit(n.target);
 		this.visit(n.source);
-        	assertCondition(n.target.kind == ASTNode.Kinds.Var); //In CSX-lite all IDs should be vars! 
         if (n.target.type == ASTNode.Types.Character && n.target.kind == ASTNode.Kinds.Array
         		&& n.source.kind == ASTNode.Kinds.String){
         	//verify array length same as string
@@ -254,9 +308,8 @@ public class TypeChecking extends Visitor {
         			|| n.operatorCode== sym.COR||n.operatorCode==sym.CAND
         			|| n.operatorCode== sym.OR||n.operatorCode==sym.AND
         			|| n.operatorCode== sym.LT||n.operatorCode==sym.GT
-        			|| n.operatorCode== sym.LEQ||n.operatorCode==sym.LEQ
-        			|| n.operatorCode== sym.GEQ||n.operatorCode==sym.TIMES
-        			|| n.operatorCode== sym.SLASH);
+        			|| n.operatorCode== sym.LEQ||n.operatorCode== sym.GEQ
+        			|| n.operatorCode==sym.TIMES||n.operatorCode== sym.SLASH);
 		this.visit(n.leftOperand);
 		this.visit(n.rightOperand);
         	if (n.operatorCode== sym.PLUS||n.operatorCode==sym.MINUS

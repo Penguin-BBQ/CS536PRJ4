@@ -310,7 +310,7 @@ pri
 		;
 unary
 		::=	NOT	unary:u
-			  {: RESULT=new unaryOpNode((int) '!', u, u.linenum, u.colnum); :}
+			  {: RESULT=new unaryOpNode(sym.NOT, u, u.linenum, u.colnum); :}
 		| LPAREN type:t RPAREN unary:u
 			  {: RESULT=new castNode(t, u, t.linenum, t.colnum); :}
 		| unit:u

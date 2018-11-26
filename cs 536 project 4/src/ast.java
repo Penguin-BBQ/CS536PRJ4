@@ -814,6 +814,7 @@ class strLitNode extends exprNode {
 abstract class exprNodeOption extends ASTNode {
 	exprNodeOption(){super();};
 	exprNodeOption(int l,int c){super(l,c);};
+	boolean isNull() {return false;}
 
 	static nullExprNode NULL = new nullExprNode();
 };
