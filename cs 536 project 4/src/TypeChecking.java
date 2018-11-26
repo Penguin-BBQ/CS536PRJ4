@@ -390,7 +390,8 @@ public class TypeChecking extends Visitor {
 	 void visit(classNode n){
 		 st.openScope();
 		 this.visit(n.members);
-		 System.out.println("Type checking for valArgDeclNode not yet implemented");
+		 //No type checking needed
+		 
 		}
 
 	 void  visit(memberDeclsNode n){
