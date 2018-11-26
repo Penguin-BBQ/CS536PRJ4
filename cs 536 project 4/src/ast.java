@@ -257,7 +257,6 @@ abstract class typeNode extends typeNodeOption {
 	};
 
 class nullTypeNode extends typeNodeOption {
-	
 	nullTypeNode(){};
 
 	boolean   isNull(){return true;};
@@ -970,6 +969,8 @@ class intLitNode extends exprNode {
 	intLitNode(int val, int line, int col){
 		super(line,col);
 		intval=val;
+		type = Types.Integer;
+		kind = Kinds.Value;
 	}
 
 	void accept(Visitor u){ u.visit(this);}
@@ -982,6 +983,8 @@ class bitStringNode extends exprNode {
 		super(line,col);
 		intValue=val;
 		bitString=bitStr;
+		type = Types.Integer;
+		kind = Kinds.String;
 	}
 
 	void accept(Visitor u){ u.visit(this);}
@@ -994,6 +997,8 @@ class charLitNode extends exprNode {
         charLitNode(char val, int line, int col){
                 super(line,col);
                  charval=val;
+                 type = Types.Character;
+         		kind = Kinds.Value;
         }
 
 	void accept(Visitor u) { u.visit(this);}
@@ -1003,6 +1008,8 @@ class charLitNode extends exprNode {
 class trueNode extends exprNode {
         trueNode(int line, int col){
                 super(line,col);
+                type = Types.Boolean;
+         		kind = Kinds.Value;
         }
 
 	void accept(Visitor u) { u.visit(this);}
@@ -1012,6 +1019,8 @@ class trueNode extends exprNode {
 class falseNode extends exprNode {
         falseNode(int line, int col){
                 super(line,col);
+                type = Types.Boolean;
+         		kind = Kinds.Value;
         }
 
 	void accept(Visitor u) { u.visit(this);}

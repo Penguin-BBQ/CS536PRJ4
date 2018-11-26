@@ -138,6 +138,16 @@ public class TypeChecking extends Visitor {
             	id = new SymbolInfo(n.varName.idname,
                                      ASTNode.Kinds.Var, n.varType.type);
             	n.varName.type = n.varType.type;
+            	
+            	this.visit(n.varName);
+            	this.visit(n.varType);
+            	this.visit(n.initValue);
+            	
+            	// check that types are the same
+            	if (n.varType.type != ((exprNode) n.initValue).type) {
+            		typeErrors++;
+            		System.out.println(error(n) + "The initializer must be of type " + n.varType.type);
+            	}
 		try {
             		st.insert(id);
 		} catch (DuplicateException d) 
@@ -145,12 +155,7 @@ public class TypeChecking extends Visitor {
 		  catch (EmptySTException e) 
                           { /* can't happen */ }
             	n.varName.idinfo=id;
-    	}
-    	
-    	// check that types are the same
-    	if (n.varType.type != ((exprNode) n.initValue).type) {
-    		System.out.println(error(n) + "can only initialize a variable to the same type");
-    	}
+    	}	
         
 	};
 	
