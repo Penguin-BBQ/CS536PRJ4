@@ -407,10 +407,12 @@ public class TypeChecking extends Visitor {
 		 requiredTypes.add(ASTNode.Types.Integer);
 		 while (true) {
 			 try {
-				 st.insert(new SymbolInfo(temp.thisDecl.name.idname, ASTNode.Kinds.Method, temp.thisDecl.returnType.type));
+				 ArrayList<argsNodeOption> argList = new ArrayList<argsNodeOption>();
+				 argDeclsOption tempArg = temp.thisDecl.args;
+				 st.insert(new SymbolInfo(temp.thisDecl.name.idname, ASTNode.Kinds.Method, temp.thisDecl.returnType.type, argList));
 			 } catch (DuplicateException e) {
 				 typeErrors ++;
-				 System.out.println("Method name already used");
+				 System.out.println(error(temp.thisDecl) + "Method name already used");
 				 
 			 }
 			 this.typeMustBeIn(temp.thisDecl.returnType.type, requiredTypes, "Illegal method return type");
