@@ -684,7 +684,18 @@ public class TypeChecking extends Visitor {
 	  void visit(returnNode n){
 		  // calvin working on return node
 		  this.visit(n.returnVal);
-		System.out.println("Type checking for returnNode not yet implemented");
+		  ASTNode.Types functionRet;
+		  
+		  if (n.returnVal.isNull()) {
+			  /*
+			 if (!functionRet.equals(ASTNode.Types.Void)) {
+				 typeErrors++;
+				 System.out.println(error(n) + "Return type of " + " is not void.");
+			 }*/
+		  }
+		  else {
+			  ASTNode.Types type = ((exprNode) n.returnVal).type;
+		  }
 	  }
 
 	  
