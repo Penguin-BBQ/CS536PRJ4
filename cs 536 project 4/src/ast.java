@@ -126,14 +126,15 @@ class nullFieldDeclsNode extends fieldDeclsOption {
 abstract class declNode extends ASTNode {
 	declNode(){super();};
 	declNode(int l,int c){super(l,c);};
+	public boolean isNull(){return false;};
 };
 
 
 class varDeclNode extends declNode { 
-	
+	public boolean exists;
 	public final	identNode	varName;
 	public 			typeNode 	varType;
-	public final	exprNodeOption 	initValue;
+	public final	exprNodeOption 	initValue; 
 	
 	varDeclNode(identNode id, typeNode t, exprNodeOption e,
 			int line, int col){
@@ -141,7 +142,17 @@ class varDeclNode extends declNode {
 		varName=id;
 		varType=t;
 		initValue=e;
+		exists = true;
 	}
+	
+	varDeclNode(){
+		varName = null;
+		varType = null;
+		initValue = null;
+		exists = false;
+	}
+	
+	public boolean isNull(){return !exists;};
 	
 	void accept(Visitor u){ u.visit(this);}
 };
@@ -590,13 +601,13 @@ class whileNode extends stmtNode {
 class forNode extends stmtNode {
 
     public final exprNodeOption  label;
-    public final stmtOption		 initialization;
+    public final declNode	 initialization;
     public final exprNodeOption  condition;
     public final exprNodeOption	 variableChange;
     public final boolean		 inc;		 
     public final stmtNode        loopBody;
 
-    forNode(exprNodeOption i, stmtOption init, exprNodeOption e, exprNodeOption change,
+    forNode(exprNodeOption i, declNode init, exprNodeOption e, exprNodeOption change,
     		boolean increment, stmtNode s, int line, int col){
             super(line,col);
             label=i;

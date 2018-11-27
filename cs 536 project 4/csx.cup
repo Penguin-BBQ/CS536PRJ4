@@ -171,28 +171,24 @@ stmt
             {: RESULT = new whileNode( id, e, stm, w.linenum, w.colnum); :}
             |
 			rw_FOR:f LPAREN SEMI SEMI RPAREN stmt:stm
-            {: RESULT = new forNode(exprNode.NULL, stmtNode.NULL, exprNode.NULL,
+            {: RESULT = new forNode(exprNode.NULL, new varDeclNode(), exprNode.NULL,
              exprNode.NULL, false, stm,f.linenum, f.colnum); :}
             |
             ident:id COLON rw_FOR:f LPAREN SEMI SEMI RPAREN stmt:stm
-            {: RESULT = new forNode(id, stmtNode.NULL, exprNode.NULL, exprNode.NULL,
+            {: RESULT = new forNode(id, new varDeclNode(), exprNode.NULL, exprNode.NULL,
              false, stm, f.linenum, f.colnum); :}
             |
-            rw_FOR:f LPAREN name:id ASG exp:e1 SEMI exp:e2 SEMI name:id2 INCREMENT RPAREN stmt:stm
-            {: RESULT = new forNode(exprNode.NULL, new asgNode(id, e1, id.linenum, id.colnum),
-             e2, id2, true, stm, f.linenum, f.colnum); :}
+            rw_FOR:f LPAREN fielddecl:fd exp:e2 SEMI name:id2 INCREMENT RPAREN stmt:stm
+            {: RESULT = new forNode(exprNode.NULL, fd, e2, id2, true, stm, f.linenum, f.colnum); :}
             |
-            rw_FOR:f LPAREN name:id ASG exp:e1 SEMI exp:e2 SEMI name:id2 DECREMENT RPAREN stmt:stm
-            {: RESULT = new forNode(exprNode.NULL, new asgNode(id, e1, id.linenum, id.colnum),
-             e2, id2, false, stm, f.linenum, f.colnum); :}
+            rw_FOR:f LPAREN fielddecl:fd exp:e2 SEMI name:id2 DECREMENT RPAREN stmt:stm
+            {: RESULT = new forNode(exprNode.NULL, fd, e2, id2, false, stm, f.linenum, f.colnum); :}
             |
-            ident:i COLON rw_FOR:f LPAREN name:id ASG exp:e1 SEMI exp:e2 SEMI name:id2 INCREMENT RPAREN stmt:stm
-            {: RESULT = new forNode(i, new asgNode(id, e1, id.linenum, id.colnum),
-             e2, id2, true, stm, f.linenum, f.colnum); :}
+            ident:i COLON rw_FOR:f LPAREN fielddecl:fd exp:e2 SEMI name:id2 INCREMENT RPAREN stmt:stm
+            {: RESULT = new forNode(i, fd, e2, id2, true, stm, f.linenum, f.colnum); :}
             |
-            ident:i COLON rw_FOR:f LPAREN name:id ASG exp:e1 SEMI exp:e2 SEMI name:id2 DECREMENT RPAREN stmt:stm
-            {: RESULT = new forNode(i, new asgNode(id, e1, id.linenum, id.colnum),
-             e2, id2, false, stm, f.linenum, f.colnum); :}
+            ident:i COLON rw_FOR:f LPAREN fielddecl:fd exp:e2 SEMI name:id2 DECREMENT RPAREN stmt:stm
+            {: RESULT = new forNode(i, fd, e2, id2, false, stm, f.linenum, f.colnum); :}
             |
 			name:id ASG exp:e SEMI
 			{: RESULT=

@@ -686,7 +686,6 @@ public class TypeChecking extends Visitor {
 	}
 
 	void visit(whileNode n){
-		
 		this.visit(n.condition);
 		if(n.condition.type != ASTNode.Types.Boolean)
 		{
@@ -716,6 +715,79 @@ public class TypeChecking extends Visitor {
 		}
 	  }
 
+	boolean areNullsValid(declNode init, exprNodeOption condition, exprNodeOption variableChange){
+		if (init.isNull()){
+			return condition.isNull() && variableChange.isNull();
+		}
+		return !condition.isNull() && !variableChange.isNull();
+	}
+	
+	void visit(forNode n) {
+		st.openScope();
+		if (n.linenum == 21){
+			System.out.println("Hi");
+		}
+		if (!areNullsValid(n.initialization, n.condition, n.variableChange)){
+			typeErrors++;
+			System.out.println(error(n) + "Either all parameters of for loop must be null or none can be null.");
+		}
+		else{
+			if (!n.initialization.isNull()){
+				this.visit(n.initialization);
+				if (! (n.initialization instanceof varDeclNode)){
+					typeErrors++;
+					System.out.println(error(n) + "Initializing parameter of for loop must be an int scalar variable.");
+				}
+				else{
+					varDeclNode init = (varDeclNode) n.initialization;
+					if (!init.varType.type.equals(ASTNode.Types.Integer)){
+						typeErrors++;
+						System.out.println(error(n) + "Initializing parameter of for loop must be an int.");
+					}
+					if (!isScalar(init.varName.kind)){
+						typeErrors++;
+						System.out.println(error(n) + "Initializing parameter of for loop must be a scalar.");
+					}
+					if (init.initValue.isNull()){
+						typeErrors++;
+						System.out.println(error(n) + "Initializing parameter of for loop must be assigned a value.");
+					}
+				}
+			}
+			if (!n.condition.isNull()){
+				this.visit(n.condition);
+				if(((exprNode)n.condition).type != ASTNode.Types.Boolean)
+				{
+					typeErrors++;
+					System.out.println(error(n) + "Condition is not a boolean");
+					
+				}
+				if(!isScalar(((exprNode)n.condition).kind)) {
+					typeErrors++;
+					System.out.println(error(n) + "Condition is not scalar");
+				}
+			}
+			if (!n.variableChange.isNull()){
+				this.visit(n.variableChange);
+			}
+		}
+		if (!n.label.isNull()) {
+			st.addLabel((identNode) n.label);
+			try {
+				st.insert(new SymbolInfo(((identNode) n.label).idname, ASTNode.Kinds.VisibleLabel, ASTNode.Types.Character));
+			}	catch (DuplicateException d) {}
+		}
+		this.visit(n.loopBody);
+		if (!n.label.isNull()) {
+			st.removeLavel((identNode)n.label);
+		}
+		try {
+			st.closeScope();
+		} catch (EmptySTException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	void visit(breakNode n){
 		SymbolInfo label = (SymbolInfo) st.findSymbol(n.label.idname, st.nextScope());
 		if (label == null) {
@@ -1020,11 +1092,5 @@ public class TypeChecking extends Visitor {
 
 	void visit(bitStringNode n){
 		//System.out.println("Type checking for bitStringNode not yet implemented");
-	}
-
-	@Override
-	void visit(forNode n) {
-		// TODO Auto-generated method stub
-		
 	}
 }
