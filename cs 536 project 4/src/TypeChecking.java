@@ -624,10 +624,31 @@ public class TypeChecking extends Visitor {
 	}
 
 	void visit(whileNode n){
-		this.visit(n.label);
+		
 		this.visit(n.condition);
+		if(n.condition.type != ASTNode.Types.Boolean)
+		{
+			typeErrors++;
+			System.out.println(error(n) + "Condition is not a boolean");
+			
+		}
+		if(!isScalar(n.condition.kind)) {
+			typeErrors++;
+			System.out.println(error(n) + "Condition is not scalar");
+		}
+		if (!n.label.isNull()) {
+			st.addLabel((identNode) n.label);
+		}
+		st.openScope();
 		this.visit(n.loopBody);
-		System.out.println("Type checking for whileNode not yet implemented");
+		if (!n.label.isNull()) {
+			st.removeLavel((identNode)n.label);
+		}
+		try {
+			st.closeScope();
+		} catch (EmptySTException e) {
+			e.printStackTrace();
+		}
 	  }
 
 	void visit(breakNode n){
