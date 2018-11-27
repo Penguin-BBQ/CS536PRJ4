@@ -40,7 +40,7 @@ public class TypeChecking extends Visitor {
 			if(master.type != thisDecl.returnType.type) {
 				typeErrors++;
 				System.out.println(error(thisDecl) 
-						+ thisDecl.name.idname + " is already declared");
+						+ thisDecl.name.idname + " is already declared.");
 				return false; //return false for already declared method calls
 			}
 			
@@ -290,7 +290,7 @@ public class TypeChecking extends Visitor {
         		strLitNode str = (strLitNode) n.source;
         		int len = 0;
         		for (int i = 1; i < str.strval.length()-1; i++) { 
-        			len++;
+        			len++; 
         			if (str.strval.charAt(i) == '\\'){
         				i++;
         			}
@@ -336,9 +336,23 @@ public class TypeChecking extends Visitor {
         	  typeMustBe(n.condition.type, ASTNode.Types.Boolean,
                 	error(n) + "The control expression of an" +
                           	" if must be a bool.");
-
+          st.openScope();
 		  this.visit(n.thenPart);
-		  // No else parts in CSXlite
+		  try {
+			  st.closeScope();
+		  } catch (EmptySTException e) {
+			  // TODO Auto-generated catch block
+			  e.printStackTrace();
+		  }
+		  st.openScope();
+		  this.visit(n.elsePart);
+		  try {
+			  st.closeScope();
+		  } catch (EmptySTException e) {
+			  // TODO Auto-generated catch block
+			  e.printStackTrace();
+		}	
+		
 	}
 	  
 	 void visit(printNode n){
@@ -957,7 +971,7 @@ public class TypeChecking extends Visitor {
 		  else{
 			 n.type = ASTNode.Types.Boolean;
 			String errorMsg = error(n) + "Operand of" + opToString(n.operatorCode) 
-	        	+  "must be arithmetic or must be bool.";
+	        	+  "must be boolean.";
 			System.out.println(errorMsg);
   			typeErrors++;
 		  }
