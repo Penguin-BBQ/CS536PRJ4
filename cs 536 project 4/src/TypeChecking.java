@@ -255,6 +255,7 @@ public class TypeChecking extends Visitor {
         n.type=n.varName.type;
         n.kind=n.varName.kind;
         if(!n.subscriptVal.isNull()) {
+        	this.visit(n.subscriptVal);
         	if (isScalar(n.kind)) {
         		typeErrors++;
 				System.out.println(error(n) + "Only arrays can be subscripted.");
@@ -262,6 +263,9 @@ public class TypeChecking extends Visitor {
         	else if (((exprNode) n.subscriptVal).type != ASTNode.Types.Integer && ((exprNode) n.subscriptVal).type != ASTNode.Types.Character){
         		typeErrors++;
         		System.out.println(error(n) + "Array subscripts must be integer or character expressions.");
+        	}
+        	else if(isScalar(((exprNode)n.subscriptVal).kind)) {
+        		n.kind=((exprNode)n.subscriptVal).kind;
         	}
 		}
 	}
