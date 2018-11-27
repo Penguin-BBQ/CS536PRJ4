@@ -682,6 +682,7 @@ public class TypeChecking extends Visitor {
 	  
 
 	  void visit(returnNode n){
+		  // calvin working on return node
 		  this.visit(n.returnVal);
 		System.out.println("Type checking for returnNode not yet implemented");
 	  }
