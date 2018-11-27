@@ -393,13 +393,15 @@ public class TypeChecking extends Visitor {
 	 void  visit(memberDeclsNode n){
 		 //Build list of methods
 		 methodDeclsNode temp = (methodDeclsNode) n.methods;
-		 while (!temp.moreDecls.isNull()) {
+		 while (true) {
 			 try {
 				 st.insert(new SymbolInfo(temp.thisDecl.name.idname, ASTNode.Kinds.Method, temp.thisDecl.name.type));
 			 } catch (DuplicateException e) {
 				 System.out.println(e.getMessage());
 			 }
-			 
+			 if(temp.moreDecls.isNull()) {
+				 break;
+			 }
 			 temp = (methodDeclsNode) temp.moreDecls;
 		 }
 		 this.visit(n.fields);
