@@ -28,6 +28,10 @@ class SymbolTable {
    private Scope top;
    private Scope bottom;
 
+   public Scope nextScope() {
+	   return top.next;
+   }
+   
    SymbolTable() {top = new Scope(); bottom = top;}
    public void addLabel(identNode label) {
 	   labels.add(label);

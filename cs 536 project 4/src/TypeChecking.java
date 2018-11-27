@@ -655,10 +655,13 @@ public class TypeChecking extends Visitor {
 			typeErrors++;
 			System.out.println(error(n) + "Condition is not scalar");
 		}
+		st.openScope();
 		if (!n.label.isNull()) {
 			st.addLabel((identNode) n.label);
+			try {
+				st.insert(new SymbolInfo(((identNode) n.label).idname, ASTNode.Kinds.VisibleLabel, ASTNode.Types.Character));
+			}	catch (DuplicateException d) {}
 		}
-		st.openScope();
 		this.visit(n.loopBody);
 		if (!n.label.isNull()) {
 			st.removeLavel((identNode)n.label);
@@ -671,12 +674,18 @@ public class TypeChecking extends Visitor {
 	  }
 
 	void visit(breakNode n){
-		this.visit(n.label);
-		System.out.println("Type checking for breakNode not yet implemented");
+		SymbolInfo label = (SymbolInfo) st.findSymbol(n.label.idname, st.nextScope());
+		if (label == null) {
+			typeErrors++;
+			System.out.println(error(n) + n.label.idname + " doesn't label an enclosing while loop.");
+		}
 	}
 	void visit(continueNode n){
-		this.visit(n.label);
-		System.out.println("Type checking for continueNode not yet implemented");
+		SymbolInfo label = (SymbolInfo) st.findSymbol(n.label.idname, st.nextScope());
+		if (label == null) {
+			typeErrors++;
+			System.out.println(error(n) + n.label.idname + " doesn't label an enclosing while loop.");
+		}
 	}
 	
 	boolean isArgValid(argsNode args, int count, List<argDeclNode> methodArgs) {
@@ -775,7 +784,7 @@ public class TypeChecking extends Visitor {
 				SymbolInfo match = findRightMethod(method, n);
 				if (match == null) {
 					typeErrors++;
-					System.out.println(error(n) + "None of the " + method.overLoadedMethods.size() + 1 + " definitions of method " + n.methodName + " match the parameters in this call.");
+					System.out.println(error(n) + "None of the " + (method.overLoadedMethods.size() + 1) + " definitions of method " + n.methodName.idname + " match the parameters in this call.");
 				}
 			}
 		}
@@ -908,7 +917,7 @@ public class TypeChecking extends Visitor {
 					SymbolInfo match = findRightFctMethod(method, n);
 					if (match == null) {
 						typeErrors++;
-						System.out.println(error(n) + "None of the " + method.overLoadedMethods.size() + 1 + " definitions of method " + n.methodName + " match the parameters in this call.");
+						System.out.println(error(n) + "None of the " + (method.overLoadedMethods.size() + 1) + " definitions of method " + n.methodName.idname + " match the parameters in this call.");
 					}
 				}
 			}
