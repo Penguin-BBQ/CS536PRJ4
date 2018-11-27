@@ -264,9 +264,6 @@ public class TypeChecking extends Visitor {
 	}
 
 	void visit(asgNode n){
-		if (n.linenum == 51) {
-			System.out.println("hi");
-		}
 		this.visit(n.target);
 		this.visit(n.source);
 		if (n.target.varName.idinfo == null) {
