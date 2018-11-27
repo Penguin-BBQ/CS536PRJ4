@@ -136,6 +136,10 @@ public class TypeChecking extends Visitor {
 				return(" / ");
 			case sym.NOT:
 				return(" ! ");
+			case sym.DECREMENT:
+				return(" -- ");
+			case sym.INCREMENT:
+				return(" ++ ");
 			default:
 				assertCondition(false);
 				return "";
@@ -530,7 +534,6 @@ public class TypeChecking extends Visitor {
 	 void visit(nullMethodDeclsNode n){}
 
 	 void visit(methodDeclNode n){ 
-		 //COMEBACKHERE
 		 st.openScope(n);
 		 this.visit(n.args);
 		 this.visit(n.decls);
@@ -566,7 +569,7 @@ public class TypeChecking extends Visitor {
 			types.add(ASTNode.Types.Integer);
 			types.add(ASTNode.Types.Character);
 			typeMustBeIn(n.target.type, types,
-             	error(n) + "Operand of decrement must be arithmetic.");
+             	error(n) + "Operand of -- must be arithmetic.");
 			if (n.target.varName.idinfo != null){
 				scalarErrorCheck(n, n.target.varName.idinfo.kind, "--");
 				if (isUnchangeable(n.target.varName.idinfo.kind)) {
@@ -802,7 +805,9 @@ public class TypeChecking extends Visitor {
 	  
 	  void visit(readNode n){
 		 this.visit(n.targetVar);
-		 if (isUnchangeable(n.targetVar.kind) || n.targetVar.kind == ASTNode.Kinds.Array) {
+		 
+		 if (isUnchangeable(n.targetVar.kind) || n.targetVar.kind == ASTNode.Kinds.Array 
+				 || n.targetVar.kind == ASTNode.Kinds.Method) {
 			 typeErrors++;
 			 System.out.println(error(n) + n.targetVar.varName.idname + " may not be assigned to.");
 		 }
