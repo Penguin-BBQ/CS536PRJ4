@@ -322,6 +322,8 @@ class voidTypeNode extends typeNode {
 abstract class methodDeclsOption extends ASTNode {
 	methodDeclsOption(){super();};
 	methodDeclsOption(int l,int c){super(l,c);};
+	
+	boolean   isNull(){return false;};
 
         static nullMethodDeclsNode NULL = new nullMethodDeclsNode();
 };
@@ -330,6 +332,7 @@ class methodDeclsNode extends methodDeclsOption {
 
         public final methodDeclNode         thisDecl;
         public final methodDeclsOption      moreDecls;
+        
 
         methodDeclsNode(methodDeclNode m, methodDeclsOption ms, int line, int col){
                 super(line,col);

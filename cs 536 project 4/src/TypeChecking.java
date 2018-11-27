@@ -180,7 +180,15 @@ public class TypeChecking extends Visitor {
 
 // Extend varDeclNode's method to handle initialization
 	void visit(varDeclNode n){
+		if (checkDecl(n, n.varName, n.varType.type)) {
+			if (!n.initValue.isNull() && (n.varType.type != ((exprNode) n.initValue).type)) {
+        		typeErrors++;
+        		System.out.println(error(n) + "The initializer must be of type " + n.varType.type);
+        	}
+		}
 		
+		
+		/*
 		SymbolInfo     id;
     	id = (SymbolInfo) st.localLookup(n.varName.idname);
     	if (id != null) {
@@ -204,10 +212,9 @@ public class TypeChecking extends Visitor {
 	          st.insert(id);
 			} catch (DuplicateException d) 
 	                          { /* can't happen */ }
-	        n.varName.idinfo=id;
+	   /*     n.varName.idinfo=id;
     	}	
-        
-	};
+	}*/
 	
 	void visit(nullTypeNode n){}
 	
@@ -468,6 +475,9 @@ public class TypeChecking extends Visitor {
 	}
 	
 	void visit(constDeclNode n){
+		checkDecl(n, n.constName, n.constValue.type);
+	}
+		/*
 		SymbolInfo     id;
     	id = (SymbolInfo) st.localLookup(n.constName.idname);
     	if (id != null) {
@@ -475,19 +485,37 @@ public class TypeChecking extends Visitor {
                                  " is already declared.");
             	typeErrors++;
             	n.constName.type = ASTNode.Types.Error;
-    	} else {
+    	} 
+    	else {
             	id = new SymbolInfo(n.constName.idname,
                                      ASTNode.Kinds.Var, n.constValue.type);
             	n.constName.type = n.constValue.type;
 		try {
             		st.insert(id);
 		} catch (DuplicateException d) 
-                          { /* can't happen */ }
-            	n.constName.idinfo=id;
-    	}	
-	 }
-	 
+                          { /* can't happen */ 
+            	/*n.constName.idinfo=id;
+    	}	*/
+	
+	boolean checkDecl(declNode n, identNode name, ASTNode.Types type) {
+		SymbolInfo id;
+		id = (SymbolInfo) st.localLookup(name.idname);
+		try {
+			id = new SymbolInfo(name.idname, ASTNode.Kinds.Var, type);
+			name.type = type;
+			name.idinfo=id;
+			st.insert(id);
+		} catch (DuplicateException d) {
+			System.out.println(error(n) + id.name() + " is already declared.");
+			typeErrors++;
+			name.type = ASTNode.Types.Error;
+			return false;
+		}
+		return true;
+	}
+	
 	 void visit(arrayDeclNode n){
+		checkDecl(n, n.arrayName, n.elementType.type);
 		if (n.arraySize.intval <= 0) {
 			typeErrors++;
 			System.out.println(error(n) + n.arrayName.idname + " must have more than 0 elements.");
