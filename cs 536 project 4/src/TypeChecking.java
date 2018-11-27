@@ -689,6 +689,7 @@ public class TypeChecking extends Visitor {
 
 	  
 	  void visit(argsNode n){
+		  //Chayce working on it
 		  this.visit(n.argVal);
 		  this.visit(n.moreArgs);
 		System.out.println("Type checking for argsNode not yet implemented");
