@@ -13,6 +13,7 @@ class SymbolInfo extends Symb {
  public ASTNode.Types type; // Should always be Integer or Boolean in CSX-lite
  public List<argDeclNode> methodArgs;
  public List<SymbolInfo> overLoadedMethods;
+ public int arraysize;
 
  public SymbolInfo(String id, ASTNode.Kinds k, ASTNode.Types t){    
 	super(id);
@@ -20,6 +21,7 @@ class SymbolInfo extends Symb {
 	type = t;
 	methodArgs = null;
 	overLoadedMethods = new ArrayList<SymbolInfo>();
+	arraysize = -1;
 	};
 
 public SymbolInfo(String id, ASTNode.Kinds k, ASTNode.Types t, List<argDeclNode> args) {
@@ -28,6 +30,7 @@ public SymbolInfo(String id, ASTNode.Kinds k, ASTNode.Types t, List<argDeclNode>
 	type = t;
 	methodArgs = args;
 	overLoadedMethods = new ArrayList<SymbolInfo>();
+	arraysize = -1;
 	}
  public String toString(){
              return "("+name()+": kind=" + kind+ ", type="+  type+")";};

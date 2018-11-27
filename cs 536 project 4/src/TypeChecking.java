@@ -62,12 +62,14 @@ public class TypeChecking extends Visitor {
                         typeErrors++;
                 }
         }
-	 void typesMustBeEqual(ASTNode.Types type1,ASTNode.Types type2,String errorMsg) {
+	 boolean typesMustBeEqual(ASTNode.Types type1,ASTNode.Types type2,String errorMsg) {
 		 if ((type1 != ASTNode.Types.Error) && (type2 != ASTNode.Types.Error) &&
                      (type1 != type2)) {
                         System.out.println(errorMsg);
                         typeErrors++;
+                        return false;
                 }
+		 return true;
         }
 	 void typeMustBeIn(ASTNode.Types testType,LinkedList<ASTNode.Types> requiredTypes,String errorMsg) {
 		 if (testType == ASTNode.Types.Error){
@@ -199,7 +201,7 @@ public class TypeChecking extends Visitor {
 
 // Extend varDeclNode's method to handle initialization
 	void visit(varDeclNode n){
-		if (checkDecl(n, n.varName, n.varType.type, false, ASTNode.Kinds.Var)) {
+		if (checkDecl(n, n.varName, n.varType.type, false, ASTNode.Kinds.Var, -1)) {
 			if (!n.initValue.isNull() && (n.varType.type != ((exprNode) n.initValue).type)) {
         		typeErrors++;
         		System.out.println(error(n) + "The initializer must be of type " + n.varType.type);
@@ -234,11 +236,13 @@ public class TypeChecking extends Visitor {
 	void visit(nameNode n){
 		this.visit(n.varName); // Subscripts not allowed in CSX Lite
         	n.type=n.varName.type;
+        	n.kind=n.varName.kind;
 
 	}
 
 	void visit(asgNode n){
 		this.visit(n.target);
+		this.visit(n.source);
 		if (n.target.varName.idinfo == null) {
 		}
 		else if (isUnchangeable(n.target.varName.idinfo.kind)) {
@@ -247,13 +251,46 @@ public class TypeChecking extends Visitor {
 		}
 		else if (n.target.type == ASTNode.Types.Character && n.target.kind == ASTNode.Kinds.Array
         		&& n.source.kind == ASTNode.Kinds.String){
-        	//verify array length same as string
+        	if (n.target.varName.idinfo != null) {
+        		strLitNode str = (strLitNode) n.source;
+        		int len = 0;
+        		for (int i = 1; i < str.strval.length()-1; i++) {
+        			len++;
+        			if (str.strval.charAt(i) == '\\'){
+        				i++;
+        			}
+        		}
+        		if (n.target.varName.idinfo.arraysize != len) {
+        			typeErrors++;
+					System.out.println(error(n) + "Source and target of the assignment must have the same length.");
+        		}
+        	}
         }
+		else if (isScalar(n.target.kind) && isScalar(n.source.kind)){
+			if (n.target.type == ASTNode.Types.Integer && n.source.type == ASTNode.Types.Character) {}
+			else if (n.target.type == ASTNode.Types.Character && n.source.type == ASTNode.Types.Integer) {}
+			else {
+				typesMustBeEqual(n.source.type, n.target.type,
+	                    error(n) + "Right hand side of an assignment is not assignable to left hand side.");
+			}
+		}
         else{
-        	typesMustBeEqual(n.source.type, n.target.type,
-                    error(n) + "Right hand side of an assignment is not assignable to left hand side.");
-        	if(n.target.kind == ASTNode.Kinds.Array && n.source.kind == ASTNode.Kinds.Array){
-        		//verify each array has the same length
+        	if (!typesMustBeEqual(n.source.type, n.target.type,
+                    error(n) + "Right hand side of an assignment is not assignable to left hand side.")) {}
+        	else if(n.target.kind == ASTNode.Kinds.Array && n.source.kind == ASTNode.Kinds.Array){
+        		if (n.target.varName.idinfo != null) {
+        			nameNode src = (nameNode) n.source;
+        			if (src.varName.idinfo != null) {
+        				if (n.target.varName.idinfo.arraysize != src.varName.idinfo.arraysize) {
+        					typeErrors++;
+        					System.out.println(error(n) + "Source and target of the assignment must have the same length.");
+        				}
+        			}
+        		}
+        	}
+        	else {
+        		System.out.println(error(n) + "Right hand side of an assignment is not assignable to left hand side.");
+        		typeErrors++;
         	}
         }
 		this.visit(n.source);
@@ -509,10 +546,10 @@ public class TypeChecking extends Visitor {
 	}
 	
 	void visit(constDeclNode n){
-		checkDecl(n, n.constName, n.constValue.type, true, ASTNode.Kinds.Value);
+		checkDecl(n, n.constName, n.constValue.type, true, ASTNode.Kinds.Value,-1);
 	}
 	
-	boolean checkDecl(declNode n, identNode name, ASTNode.Types type, boolean constant, ASTNode.Kinds kind) {
+	boolean checkDecl(declNode n, identNode name, ASTNode.Types type, boolean constant, ASTNode.Kinds kind, int arraysize) {
 		SymbolInfo id;
 		id = (SymbolInfo) st.localLookup(name.idname);
 		try {
@@ -520,6 +557,7 @@ public class TypeChecking extends Visitor {
 			name.type = type;
 			name.kind = kind;
 			name.idinfo=id;
+			id.arraysize = arraysize;
 			st.insert(id);
 		} catch (DuplicateException d) {
 			System.out.println(error(n) + name.idname + " is already declared.");
@@ -532,7 +570,8 @@ public class TypeChecking extends Visitor {
 	}
 	
 	 void visit(arrayDeclNode n){
-		checkDecl(n, n.arrayName, n.elementType.type, false, ASTNode.Kinds.Array);
+		checkDecl(n, n.arrayName, n.elementType.type, false, ASTNode.Kinds.Array, n.arraySize.intval);
+		this.visit(n.elementType);
 		if (n.arraySize.intval <= 0) {
 			typeErrors++;
 			System.out.println(error(n) + n.arrayName.idname + " must have more than 0 elements.");
@@ -630,11 +669,11 @@ public class TypeChecking extends Visitor {
 
 	
 	void visit(charLitNode n){
-		System.out.println("Type checking for charLitNode not yet implemented");
+		n.type = ASTNode.Types.Character;
 	}
 	  
 	void visit(strLitNode n){
-		System.out.println("Type checking for strLitNode not yet implemented");
+		n.kind = ASTNode.Kinds.String;
 	}
 
 	
