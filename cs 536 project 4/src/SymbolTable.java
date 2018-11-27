@@ -48,15 +48,13 @@ class SymbolTable {
 	   return bottom;
    }
    
-   public Symb findMethod(String key) {
+   public Symb findBottomSymbol(String key) {
+	   return findSymbol(key, bottom);
+   }
+   
+   public Symb findSymbol(String key, Scope scope) {
 	   key = key.toLowerCase();
-	   SymbolInfo checkKey = (SymbolInfo) bottomLookup(key);
-	   if (checkKey != null) {
-		   if (checkKey.kind == ASTNode.Kinds.Method) {
-			   return checkKey;
-		   }
-	   }
-	   return null;
+	   return (SymbolInfo) scopeLookup(key, scope);
    }
 
    public void insert(Symb s)
@@ -92,11 +90,11 @@ class SymbolTable {
       top.currentScope.put(key,s);
    }
 
-   public Symb bottomLookup(String s) {
+   public Symb scopeLookup(String s, Scope scope) {
 	   String key = s.toLowerCase();
 	      if (top == null)
 	         return null;
-	      Symb ans =bottom.currentScope.get(key);
+	      Symb ans =scope.currentScope.get(key);
 	      return ans;
    }
    

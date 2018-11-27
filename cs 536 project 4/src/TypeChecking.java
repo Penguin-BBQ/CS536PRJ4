@@ -676,7 +676,17 @@ public class TypeChecking extends Visitor {
 		//calvin working on callNode
 		this.visit(n.methodName);
 		this.visit(n.args);
-		System.out.println("Type checking for callNode not yet implemented");
+		SymbolInfo method = (SymbolInfo) st.findBottomSymbol(n.methodName.idname);
+		if (method == null) {
+			// will already be handled by visiting
+		}
+		else if (!method.kind.equals(ASTNode.Kinds.Method)) {
+			typeErrors++;
+			System.out.println(error(n) + n.methodName.idname + " isn't a method.");
+		}
+		else {
+			
+		}
 	}
 
 	  
