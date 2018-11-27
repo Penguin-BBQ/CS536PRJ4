@@ -220,7 +220,7 @@ public class TypeChecking extends Visitor {
 	}
 	void visit(nullStmtsNode n){}
 
-// Extend varDeclNode's method to handle initialization
+// Extend varDeclNode's method to handle initialization - CRR - Looks like it has been modified, not sure if finished
 	void visit(varDeclNode n){
 		if (checkDecl(n, n.varName, n.varType.type, false, ASTNode.Kinds.Var, -1)) {
 			if (!n.initValue.isNull() && (n.varType.type != ((exprNode) n.initValue).type)) {
@@ -253,7 +253,7 @@ public class TypeChecking extends Visitor {
     	}
 	}
 
-// Extend nameNode's method to handle subscripts
+// Extend nameNode's method to handle subscripts - CRR - Looks like calvin has done stuff, not sure if finished
 	void visit(nameNode n){
 		this.visit(n.varName); 
         n.type=n.varName.type;
@@ -330,7 +330,7 @@ public class TypeChecking extends Visitor {
         }
 	}
 
-// Extend ifThenNode's method to handle else parts
+// Extend ifThenNode's method to handle else parts - Done
 	void visit(ifThenNode n){
 		  this.visit(n.condition);
         	  typeMustBe(n.condition.type, ASTNode.Types.Boolean,
