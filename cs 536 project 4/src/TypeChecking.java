@@ -565,7 +565,6 @@ public class TypeChecking extends Visitor {
 	void visit(argDeclsNode n){
 		this.visit(n.thisDecl);
 		this.visit(n.moreDecls);
-		//System.out.println("Type checking for argDeclsNode not yet implemented");
 	}
 
 	void visit(nullArgDeclsNode n){}
@@ -573,11 +572,10 @@ public class TypeChecking extends Visitor {
 	
 	void visit(valArgDeclNode n){
 		visit(n.argType);
-		visit(n.argName);
 		n.type = n.argType.type;
 		n.kind = ASTNode.Kinds.ScalarParm;
 		try {
-			st.insert(new SymbolInfo(n.argName.idname,n.argName.kind,n.argType.type));
+			st.insert(new SymbolInfo(n.argName.idname,n.kind,n.type));
 		} catch (DuplicateException e) {
 			typeErrors++;
 			System.out.println(error(n) + n.argName.idname + " is already declared.");
@@ -586,11 +584,10 @@ public class TypeChecking extends Visitor {
 	
 	void visit(arrayArgDeclNode n){
 		visit(n.elementType);
-		visit(n.argName);
 		n.type = n.elementType.type;
 		n.kind = ASTNode.Kinds.ArrayParm;
 		try {
-			st.insert(new SymbolInfo(n.argName.idname,n.argName.kind,n.elementType.type));
+			st.insert(new SymbolInfo(n.argName.idname,n.kind,n.type));
 		} catch (DuplicateException e) {
 			typeErrors++;
 			System.out.println(error(n) + n.argName.idname + " is already declared.");
@@ -679,10 +676,6 @@ public class TypeChecking extends Visitor {
 	}
 	
 	boolean isArgValid(argsNode args, int count, List<argDeclNode> methodArgs) {
-		/*if (args.linenum == 103) {
-			System.out.println("hi");
-		}*/
-		
 		if (count >= methodArgs.size()) {
 			return false;
 		}
@@ -758,7 +751,6 @@ public class TypeChecking extends Visitor {
 	}
 	
 	void visit(callNode n){
-		//calvin working on callNode
 		this.visit(n.methodName);
 		this.visit(n.args);
 		SymbolInfo method = (SymbolInfo) st.findBottomSymbol(n.methodName.idname);
@@ -766,6 +758,10 @@ public class TypeChecking extends Visitor {
 		else if (!method.kind.equals(ASTNode.Kinds.Method)) {
 			typeErrors++;
 			System.out.println(error(n) + n.methodName.idname + " isn't a method.");
+		}
+		else if (!method.type.equals(ASTNode.Types.Void)) {
+			typeErrors++;
+			System.out.println(error(n) + n.methodName.idname + " is called as a procedure and must therefore return void.");
 		}
 		else {
 			if (method.overLoadedMethods.size() == 0) {
@@ -798,7 +794,7 @@ public class TypeChecking extends Visitor {
 	  
 
 	  void visit(returnNode n){
-		  // calvin working on return node
+		  // calvin was working on this, need way to determine current method though
 		  this.visit(n.returnVal);
 		  ASTNode.Types functionRet;
 		  
@@ -829,12 +825,90 @@ public class TypeChecking extends Visitor {
 		  n.type = n.resultType.type;
 		  n.kind = ASTNode.Kinds.Value;
 	  }
-
-	  void visit(fctCallNode n){
-		  this.visit(n.methodName);
-		  this.visit(n.methodArgs);
-		System.out.println("Type checking for fctCallNode not yet implemented");
-	  }
+		
+		boolean isFctMethodRight(SymbolInfo method, fctCallNode n) {
+			if (method.methodArgs == null) {
+				return n.methodArgs.isNull();
+			}
+			else {
+				int argsCount = 0;
+				argsNodeOption args = n.methodArgs;
+				while (!args.isNull()) {
+					if (!isArgValid((argsNode) args, argsCount, method.methodArgs)) {
+						return false;
+					}
+					argsCount++;
+					args = ((argsNode) args).moreArgs; 
+				}
+				return argsCount == method.methodArgs.size();
+			}
+		}
+		
+		void printIsFctMethodRight(SymbolInfo method, fctCallNode n) {
+			if (method.methodArgs == null) {
+				if (!n.methodArgs.isNull()) {
+					typeErrors++;
+					System.out.println(error(n) + n.methodName.idname + " requires 0 parameters.");
+				}
+			}
+			else {
+				int argsCount = 0;
+				argsNodeOption args = n.methodArgs;
+				while (!args.isNull()) {
+					if (argsCount >= method.methodArgs.size()) {
+						argsCount++;
+						break;
+					}
+					if (!isArgValid((argsNode) args, argsCount, method.methodArgs)) {
+						typeErrors++;
+						System.out.println(error(n) + "In the call to " + n.methodName.idname + ", parameter " + (argsCount + 1) + " has incorrect type.");
+					}
+					argsCount++;
+					args = ((argsNode) args).moreArgs; 
+				}
+				if (argsCount != method.methodArgs.size()) {
+					typeErrors++;
+					System.out.println(error(n) + n.methodName.idname + " requires " + method.methodArgs.size() + " parameters.");
+				}
+			}
+		}
+		
+		SymbolInfo findRightFctMethod(SymbolInfo method, fctCallNode n) {
+			if (isFctMethodRight(method, n)) {
+				return method;
+			}
+			for (SymbolInfo overload : method.overLoadedMethods) {
+				if (isFctMethodRight(overload, n)) {
+					return overload;
+				}
+			}
+			return null;
+		}
+		
+		void visit(fctCallNode n){
+			this.visit(n.methodName);
+			this.visit(n.methodArgs);
+			SymbolInfo method = (SymbolInfo) st.findBottomSymbol(n.methodName.idname);
+			if (method == null) {}// will already be handled by visiting
+			else if (!method.kind.equals(ASTNode.Kinds.Method)) {
+				typeErrors++;
+				System.out.println(error(n) + n.methodName.idname + " isn't a method.");
+			}
+			else {
+				n.type = method.type;
+				n.kind = ASTNode.Kinds.Value;
+				if (method.overLoadedMethods.size() == 0) {
+					printIsFctMethodRight(method, n);
+				}
+				else {
+					SymbolInfo match = findRightFctMethod(method, n);
+					if (match == null) {
+						typeErrors++;
+						System.out.println(error(n) + "None of the " + method.overLoadedMethods.size() + 1 + " definitions of method " + n.methodName + " match the parameters in this call.");
+					}
+				}
+			}
+		}
 	  
 	  void visit(unaryOpNode n){
 		  n.kind = ASTNode.Kinds.Value;
