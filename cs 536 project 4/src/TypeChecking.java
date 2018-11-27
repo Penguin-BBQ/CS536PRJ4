@@ -186,35 +186,6 @@ public class TypeChecking extends Visitor {
         		System.out.println(error(n) + "The initializer must be of type " + n.varType.type);
         	}
 		}
-		
-		
-		/*
-		SymbolInfo     id;
-    	id = (SymbolInfo) st.localLookup(n.varName.idname);
-    	if (id != null) {
-           		 System.out.println(error(n) + id.name()+
-                                 " is already declared.");
-            	typeErrors++;
-            	n.varName.type = ASTNode.Types.Error;
-
-    	}
-    	else {
-        	id = new SymbolInfo(n.varName.idname,
-                                 ASTNode.Kinds.Var, n.varType.type);
-        	n.varName.type = n.varType.type;
-        	
-        	// check that types are the same
-        	if (!n.initValue.isNull() && (n.varType.type != ((exprNode) n.initValue).type)) {
-        		typeErrors++;
-        		System.out.println(error(n) + "The initializer must be of type " + n.varType.type);
-        	}
-			try {
-	          st.insert(id);
-			} catch (DuplicateException d) 
-	                          { /* can't happen */ }
-	   /*     n.varName.idinfo=id;
-    	}	
-	}*/
 	
 	void visit(nullTypeNode n){}
 	
@@ -488,25 +459,6 @@ public class TypeChecking extends Visitor {
 	void visit(constDeclNode n){
 		checkDecl(n, n.constName, n.constValue.type);
 	}
-		/*
-		SymbolInfo     id;
-    	id = (SymbolInfo) st.localLookup(n.constName.idname);
-    	if (id != null) {
-           		 System.out.println(error(n) + id.name()+
-                                 " is already declared.");
-            	typeErrors++;
-            	n.constName.type = ASTNode.Types.Error;
-    	} 
-    	else {
-            	id = new SymbolInfo(n.constName.idname,
-                                     ASTNode.Kinds.Var, n.constValue.type);
-            	n.constName.type = n.constValue.type;
-		try {
-            		st.insert(id);
-		} catch (DuplicateException d) 
-                          { /* can't happen */ 
-            	/*n.constName.idinfo=id;
-    	}	*/
 	
 	boolean checkDecl(declNode n, identNode name, ASTNode.Types type) {
 		SymbolInfo id;
