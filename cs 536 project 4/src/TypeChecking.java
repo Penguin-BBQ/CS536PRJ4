@@ -741,12 +741,12 @@ public class TypeChecking extends Visitor {
 			argsNodeOption args = n.args;
 			while (!args.isNull()) {
 				if (!isArgValid((argsNode) args, argsCount, method.methodArgs)) {
-					return false;
+					return false; //invalid arg, can't be this method
 				}
 				argsCount++;
 				args = ((argsNode) args).moreArgs; 
 			}
-			return argsCount == method.methodArgs.size();
+			return argsCount == method.methodArgs.size(); // all of the args we checked were valid, was it the right number?
 		}
 	}
 	
@@ -886,12 +886,12 @@ public class TypeChecking extends Visitor {
 				argsNodeOption args = n.methodArgs;
 				while (!args.isNull()) {
 					if (!isArgValid((argsNode) args, argsCount, method.methodArgs)) {
-						return false;
+						return false; //invalid arg, can't be this method
 					}
 					argsCount++;
 					args = ((argsNode) args).moreArgs; 
 				}
-				return argsCount == method.methodArgs.size();
+				return argsCount == method.methodArgs.size();// all of the args we checked were valid, was it the right number?
 			}
 		}
 		
