@@ -1,6 +1,6 @@
 import java.util.*;
 
-import com.sun.org.apache.xalan.internal.utils.XMLSecurityManager.NameMap;
+//import com.sun.org.apache.xalan.internal.utils.XMLSecurityManager.NameMap;
 
 // The following methods type check  AST nodes used in CSX Lite
 //  You will need to complete the methods after line 238 to type check the
@@ -41,7 +41,7 @@ public class TypeChecking extends Visitor {
 				typeErrors++;
 				System.out.println(error(thisDecl) 
 						+ thisDecl.name.idname + " is already declared");
-				return false; //return false for non-matching overloads
+				return false; //return false for already declared method calls
 			}
 			
 		}
@@ -285,7 +285,7 @@ public class TypeChecking extends Visitor {
         	if (n.target.varName.idinfo != null) {
         		strLitNode str = (strLitNode) n.source;
         		int len = 0;
-        		for (int i = 1; i < str.strval.length()-1; i++) {
+        		for (int i = 1; i < str.strval.length()-1; i++) { 
         			len++;
         			if (str.strval.charAt(i) == '\\'){
         				i++;
@@ -478,6 +478,7 @@ public class TypeChecking extends Visitor {
 			 ArrayList<argDeclNode> argList = TypeChecking.buildArgList(temp);
 			 try {
 				 if(this.checkOverloadedTypes(temp.thisDecl)) {
+					 //Maybe do arg duplicate checking here?
 					 st.insert(new SymbolInfo(temp.thisDecl.name.idname, ASTNode.Kinds.Method, temp.thisDecl.returnType.type, argList));
 				 }
 				 else {
@@ -494,7 +495,9 @@ public class TypeChecking extends Visitor {
 						 " is already declared.");
 				 
 			 }
-			 this.typeMustBeIn(temp.thisDecl.returnType.type, requiredTypes, "Illegal method return type");
+			 this.typeMustBeIn(temp.thisDecl.returnType.type, requiredTypes, 
+					 error(temp.thisDecl) + temp.thisDecl.name.idname 
+					 + " has an illegal method return type");
 			 
 			 if(temp.moreDecls.isNull()) {
 				 break;
@@ -526,10 +529,10 @@ public class TypeChecking extends Visitor {
 
 	 void visit(nullMethodDeclsNode n){}
 
-	 void visit(methodDeclNode n){
-		 st.openScope();
+	 void visit(methodDeclNode n){ 
+		 //COMEBACKHERE
+		 st.openScope(n);
 		 this.visit(n.args);
-		 this.visit(n.returnType);
 		 this.visit(n.decls);
 		 this.visit(n.stmts);
 	 }
@@ -813,19 +816,20 @@ public class TypeChecking extends Visitor {
 	  
 
 	  void visit(returnNode n){
-		  // calvin was working on this, need way to determine current method though
 		  this.visit(n.returnVal);
-		  ASTNode.Types functionRet;
-		  
 		  if (n.returnVal.isNull()) {
-			  /*
-			 if (!functionRet.equals(ASTNode.Types.Void)) {
+			 if (!st.currentMethod.returnType.type.equals(ASTNode.Types.Void)) {
 				 typeErrors++;
 				 System.out.println(error(n) + "Return type of " + " is not void.");
-			 }*/
+			 }
 		  }
 		  else {
 			  ASTNode.Types type = ((exprNode) n.returnVal).type;
+			  if(!type.equals(st.currentMethod.returnType.type)) {
+				  typeErrors++;
+				  System.out.println(error(n) + "Return type of " + st.currentMethod.name.idname + 
+						  " is " + st.currentMethod.returnType.type.toString() + ".");
+			  }
 		  }
 	  }
 

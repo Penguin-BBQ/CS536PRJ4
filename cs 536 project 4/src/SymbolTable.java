@@ -3,7 +3,9 @@
 //
 import java.util.*;
 
-import jdk.nashorn.internal.ir.Labels;
+
+
+//import jdk.nashorn.internal.ir.Labels;
 
 import java.io.*;
 class SymbolTable {
@@ -15,32 +17,42 @@ class SymbolTable {
       Scope() {
          currentScope = new Hashtable<String,Symb>();
          next = null;
-         labels = new ArrayList<identNode>();
       }
       Scope(Scope scopes) {
          currentScope = new Hashtable<String,Symb>();
          next = scopes;
-         labels = new ArrayList<identNode>();
       }
    }
    
    List<identNode> labels;
    private Scope top;
    private Scope bottom;
+   public methodDeclNode currentMethod;
 
    public Scope nextScope() {
 	   return top.next;
    }
    
-   SymbolTable() {top = new Scope(); bottom = top;}
+   SymbolTable() {
+	   top = new Scope(); 
+	   bottom = top;
+	   labels = new ArrayList<identNode>();
+	   }
+   
    public void addLabel(identNode label) {
 	   labels.add(label);
    }
+   
    public void removeLavel(identNode label) {
 	   labels.remove(label);
    }
+   
    public void openScope() {
-      top = new Scope(top); }
+      top = new Scope(top); 
+      }
+   public void openScope(methodDeclNode node) {
+	   	  currentMethod = node;
+	      top = new Scope(top); }
 
    public void closeScope() throws EmptySTException {
       if (top == null)
@@ -105,7 +117,7 @@ class SymbolTable {
    public Symb localLookup(String s) {
       String key = s.toLowerCase();
       if (top == null)
-         return null;
+         return null; 
       Symb ans =top.currentScope.get(key);
       return ans;
    }
