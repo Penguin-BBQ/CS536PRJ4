@@ -460,6 +460,7 @@ public class TypeChecking extends Visitor {
 		}
 
 	 void  visit(memberDeclsNode n){
+		 this.visit(n.fields);
 		 //Build list of methods for us to check against later
 		 LinkedList<ASTNode.Types> requiredTypes = new LinkedList<ASTNode.Types>();
 		 requiredTypes.add(ASTNode.Types.Boolean);
@@ -498,7 +499,6 @@ public class TypeChecking extends Visitor {
 			 typeErrors ++;
 			 System.out.println(error(n) + "Class must contain a main method of type void");
 		 }
-		 this.visit(n.fields);
 		 this.visit(n.methods);
 	 }
 	 
@@ -580,7 +580,7 @@ public class TypeChecking extends Visitor {
 			st.insert(new SymbolInfo(n.argName.idname,n.argName.kind,n.argType.type));
 		} catch (DuplicateException e) {
 			typeErrors++;
-			System.out.println(error(n) + "Duplicate variable");
+			System.out.println(error(n) + n.argName.idname + " is already declared.");
 		}
 	}
 	
@@ -589,7 +589,7 @@ public class TypeChecking extends Visitor {
 			st.insert(new SymbolInfo(n.argName.idname,n.argName.kind,n.elementType.type));
 		} catch (DuplicateException e) {
 			typeErrors++;
-			System.out.println(error(n) + "Duplicate variable");
+			System.out.println(error(n) + n.argName.idname + " is already declared.");
 		}
 	}
 	
