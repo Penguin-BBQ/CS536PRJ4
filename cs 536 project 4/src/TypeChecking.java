@@ -483,6 +483,10 @@ public class TypeChecking extends Visitor {
 			 }
 			 temp = (methodDeclsNode) temp.moreDecls;
 		 }
+		 if(!st.containsMain()) {
+			 typeErrors ++;
+			 System.out.println(error(n) + "Class must contain a main method of type void");
+		 }
 		 this.visit(n.fields);
 		 this.visit(n.methods);
 	 }
@@ -682,6 +686,7 @@ public class TypeChecking extends Visitor {
 
 	  
 	  void visit(argsNode n){
+		  //Chayce working on it
 		  this.visit(n.argVal);
 		  this.visit(n.moreArgs);
 		System.out.println("Type checking for argsNode not yet implemented");

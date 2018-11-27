@@ -109,4 +109,14 @@ class SymbolTable {
    void dump(PrintStream ps) {
      ps.print(toString());
    }
+public boolean containsMain() {
+	SymbolInfo main = (SymbolInfo) top.currentScope.get("main");
+	if(main != null) {
+		if(main.type == ASTNode.Types.Void)
+		{
+			return true;
+		}
+	}
+	return false;
+}
 }
