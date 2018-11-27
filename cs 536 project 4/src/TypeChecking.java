@@ -289,8 +289,8 @@ public class TypeChecking extends Visitor {
         	if (n.target.varName.idinfo != null) {
         		strLitNode str = (strLitNode) n.source;
         		int len = 0;
-        		for (int i = 1; i < str.strval.length()-1; i++) { 
-        			len++; 
+        		for (int i = 1; i < str.strval.length()-1; i++) {
+        			len++;
         			if (str.strval.charAt(i) == '\\'){
         				i++;
         			}
