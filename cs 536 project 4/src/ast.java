@@ -243,6 +243,7 @@ class arrayDeclNode extends declNode {
 
 abstract class typeNodeOption extends ASTNode {
 // abstract superclass; only subclasses are actually created
+	public Types type;
 	typeNodeOption(){super();};
 	typeNodeOption(int l,int c){super(l,c);};
 	static nullTypeNode NULL = new nullTypeNode();
@@ -250,8 +251,7 @@ abstract class typeNodeOption extends ASTNode {
 
 abstract class typeNode extends typeNodeOption {
 	// abstract superclass; only subclasses are actually created
-	    Types   type; // Used for typechecking -- the type of this typeNode
-	    
+	     // Used for typechecking -- the type of this typeNode
 		typeNode(){super();};
 		typeNode(int l,int c, Types t){super(l,c);type = t;};
 	};

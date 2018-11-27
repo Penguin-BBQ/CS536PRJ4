@@ -391,14 +391,22 @@ public class TypeChecking extends Visitor {
 		}
 
 	 void  visit(memberDeclsNode n){
-		 //Build list of methods
+		 //Build list of methods for us to check against later
 		 methodDeclsNode temp = (methodDeclsNode) n.methods;
+		 LinkedList<ASTNode.Types> requiredTypes = new LinkedList<ASTNode.Types>();
+		 requiredTypes.add(ASTNode.Types.Boolean);
+		 requiredTypes.add(ASTNode.Types.Void);
+		 requiredTypes.add(ASTNode.Types.Character);
+		 requiredTypes.add(ASTNode.Types.Integer);
 		 while (true) {
 			 try {
-				 st.insert(new SymbolInfo(temp.thisDecl.name.idname, ASTNode.Kinds.Method, temp.thisDecl.name.type));
+				 st.insert(new SymbolInfo(temp.thisDecl.name.idname, ASTNode.Kinds.Method, temp.thisDecl.returnType.type));
 			 } catch (DuplicateException e) {
-				 System.out.println(e.getMessage());
+				 typeErrors ++;
+				 System.out.println("Method name already used");
+				 
 			 }
+			 this.typeMustBeIn(temp.thisDecl.returnType.type, requiredTypes, "Illegal method return type");
 			 if(temp.moreDecls.isNull()) {
 				 break;
 			 }
