@@ -513,7 +513,7 @@ public class TypeChecking extends Visitor {
 				 }
 				 else {
 					 if(temp.moreDecls.isNull()) {
-						 break;
+						 break; 
 					 }
 					 temp = (methodDeclsNode) temp.moreDecls;
 					 continue;
