@@ -1,5 +1,7 @@
 import java.util.*;
 
+import com.sun.org.apache.xalan.internal.utils.XMLSecurityManager.NameMap;
+
 // The following methods type check  AST nodes used in CSX Lite
 //  You will need to complete the methods after line 238 to type check the
 //   rest of CSX
@@ -31,6 +33,18 @@ public class TypeChecking extends Visitor {
 			}
 		}
 		return argList;
+	}
+	private void checkOverloadedTypes(methodDeclNode thisDecl) {
+		SymbolInfo master = (SymbolInfo) st.localLookup(thisDecl.name.idname);
+		if(master != null) {
+			if(master.type != thisDecl.returnType.type) {
+				typeErrors++;
+				System.out.println(error(thisDecl) 
+						+ " Overloaded methods must have the same type as the original method");
+			}
+			
+		}
+		
 	}
 	boolean isScalar(ASTNode.Kinds kind){
 		return (kind == ASTNode.Kinds.Var || kind == ASTNode.Kinds.Value
@@ -443,6 +457,7 @@ public class TypeChecking extends Visitor {
 		 while (true) {
 			 ArrayList<argDeclNode> argList = TypeChecking.buildArgList(temp);
 			 try {
+				 this.checkOverloadedTypes(temp.thisDecl);
 				 st.insert(new SymbolInfo(temp.thisDecl.name.idname, ASTNode.Kinds.Method, temp.thisDecl.returnType.type, argList));
 			 } catch (DuplicateException e) {
 				 typeErrors ++;
@@ -450,6 +465,7 @@ public class TypeChecking extends Visitor {
 				 
 			 }
 			 this.typeMustBeIn(temp.thisDecl.returnType.type, requiredTypes, "Illegal method return type");
+			 
 			 if(temp.moreDecls.isNull()) {
 				 break;
 			 }
@@ -459,7 +475,8 @@ public class TypeChecking extends Visitor {
 		 this.visit(n.methods);
 	 }
 	 
-	 void  visit(methodDeclsNode n){
+	 
+	void  visit(methodDeclsNode n){
 		 this.visit(n.thisDecl);
 		 this.visit(n.moreDecls);
 		 //Type checking not needed here, these are just declarations and we already created 
@@ -534,15 +551,21 @@ public class TypeChecking extends Visitor {
 
 	
 	void visit(valArgDeclNode n){
-		this.visit(n.argName);
-		this.visit(n.argType);
-		System.out.println("Type checking for valArgDeclNode not yet implemented");
+		try {
+			st.insert(new SymbolInfo(n.argName.idname,n.argName.kind,n.argType.type));
+		} catch (DuplicateException e) {
+			typeErrors++;
+			System.out.println(error(n) + "Duplicate variable");
+		}
 	}
 	
 	void visit(arrayArgDeclNode n){
-		this.visit(n.argName);
-		this.visit(n.elementType);
-		System.out.println("Type checking for arrayArgDeclNode not yet implemented");
+		try {
+			st.insert(new SymbolInfo(n.argName.idname,n.argName.kind,n.elementType.type));
+		} catch (DuplicateException e) {
+			typeErrors++;
+			System.out.println(error(n) + "Duplicate variable");
+		}
 	}
 	
 	void visit(constDeclNode n){
