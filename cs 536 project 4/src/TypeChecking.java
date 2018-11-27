@@ -186,6 +186,7 @@ public class TypeChecking extends Visitor {
         		System.out.println(error(n) + "The initializer must be of type " + n.varType.type);
         	}
 		}
+	}
 	
 	void visit(nullTypeNode n){}
 	
