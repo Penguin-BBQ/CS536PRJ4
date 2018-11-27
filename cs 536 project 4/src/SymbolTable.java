@@ -26,8 +26,9 @@ class SymbolTable {
    
    List<identNode> labels;
    private Scope top;
+   private Scope bottom;
 
-   SymbolTable() {top = new Scope();}
+   SymbolTable() {top = new Scope(); bottom = top;}
    public void addLabel(identNode label) {
 	   labels.add(label);
    }
@@ -41,6 +42,21 @@ class SymbolTable {
       if (top == null)
          throw new EmptySTException();
       else top = top.next;
+   }
+   
+   public Scope getBottom() {
+	   return bottom;
+   }
+   
+   public Symb findMethod(String key) {
+	   key = key.toLowerCase();
+	   SymbolInfo checkKey = (SymbolInfo) bottomLookup(key);
+	   if (checkKey != null) {
+		   if (checkKey.kind == ASTNode.Kinds.Method) {
+			   return checkKey;
+		   }
+	   }
+	   return null;
    }
 
    public void insert(Symb s)
@@ -76,6 +92,14 @@ class SymbolTable {
       top.currentScope.put(key,s);
    }
 
+   public Symb bottomLookup(String s) {
+	   String key = s.toLowerCase();
+	      if (top == null)
+	         return null;
+	      Symb ans =bottom.currentScope.get(key);
+	      return ans;
+   }
+   
    public Symb localLookup(String s) {
       String key = s.toLowerCase();
       if (top == null)

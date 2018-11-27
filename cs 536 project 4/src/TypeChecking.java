@@ -450,10 +450,8 @@ public class TypeChecking extends Visitor {
 // Extend these unparsing methods to correctly unparse CSX AST nodes
 	 
 	 void visit(classNode n){
-		 st.openScope();
 		 this.visit(n.members);
 		 //No type checking needed 
-		 
 		}
 
 	 void  visit(memberDeclsNode n){
@@ -662,6 +660,7 @@ public class TypeChecking extends Visitor {
 	}
 	  
 	void visit(callNode n){
+		//calvin working on callNode
 		this.visit(n.methodName);
 		this.visit(n.args);
 		System.out.println("Type checking for callNode not yet implemented");
