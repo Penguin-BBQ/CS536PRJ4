@@ -40,7 +40,7 @@ public class TypeChecking extends Visitor {
 			if(master.type != thisDecl.returnType.type) {
 				typeErrors++;
 				System.out.println(error(thisDecl) 
-						+ " Overloaded methods must have the same type as the original method");
+						+ "Overloaded methods must have the same type as the original method");
 			}
 			
 		}
@@ -616,7 +616,11 @@ public class TypeChecking extends Visitor {
 	 }
 	
 	void visit(charTypeNode n){
-		System.out.println("Type checking for charTypeNode not yet implemented");
+		//Should never happen
+		if(n.type != ASTNode.Types.Character) {
+			typeErrors++;
+			System.out.println(error(n) + "charTypeNode is not a Character type");
+		}
 	}
 	void visit(voidTypeNode n){
 		//Shouldn't need type checking
