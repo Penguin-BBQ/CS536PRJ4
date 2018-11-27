@@ -341,16 +341,14 @@ public class TypeChecking extends Visitor {
 		  try {
 			  st.closeScope();
 		  } catch (EmptySTException e) {
-			  // TODO Auto-generated catch block
-			  e.printStackTrace();
+			  //Can't happen
 		  }
 		  st.openScope();
 		  this.visit(n.elsePart);
 		  try {
 			  st.closeScope();
 		  } catch (EmptySTException e) {
-			  // TODO Auto-generated catch block
-			  e.printStackTrace();
+			  //Can't happen
 		}	
 		
 	}
@@ -475,8 +473,6 @@ public class TypeChecking extends Visitor {
 	void visit(intLitNode n){
 	//      All intLits are automatically type-correct
 	}
-	
-// Extend these unparsing methods to correctly unparse CSX AST nodes
 	 
 	 void visit(classNode n){
 		 this.visit(n.members);
@@ -552,6 +548,11 @@ public class TypeChecking extends Visitor {
 		 this.visit(n.args);
 		 this.visit(n.decls);
 		 this.visit(n.stmts);
+		 try {
+			st.closeScope();
+		} catch (EmptySTException e) {
+			//Can't happen
+		}
 	 }
 	 
 	 void scalarErrorCheck(stmtNode n, ASTNode.Kinds kind, String operator) {
