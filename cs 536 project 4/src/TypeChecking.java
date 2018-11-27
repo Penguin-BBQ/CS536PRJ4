@@ -23,6 +23,11 @@ public class TypeChecking extends Visitor {
 				|| kind == ASTNode.Kinds.ScalarParm);
 	}
 	
+	boolean isUnchangeable(ASTNode.Kinds kind) {
+		return (kind == ASTNode.Kinds.Value || kind == ASTNode.Kinds.Method || kind == ASTNode.Kinds.HiddenLabel
+				|| kind == ASTNode.Kinds.VisibleLabel);
+	}
+	
 	boolean isTypeCorrect(csxLiteNode n) {
         	this.visit(n);
         	return (typeErrors == 0);
@@ -180,7 +185,7 @@ public class TypeChecking extends Visitor {
 
 // Extend varDeclNode's method to handle initialization
 	void visit(varDeclNode n){
-		if (checkDecl(n, n.varName, n.varType.type)) {
+		if (checkDecl(n, n.varName, n.varType.type, false, ASTNode.Kinds.Var)) {
 			if (!n.initValue.isNull() && (n.varType.type != ((exprNode) n.initValue).type)) {
         		typeErrors++;
         		System.out.println(error(n) + "The initializer must be of type " + n.varType.type);
@@ -198,7 +203,6 @@ public class TypeChecking extends Visitor {
 	}
 	void visit(identNode n){
 		SymbolInfo    id;
-    	assertCondition(n.kind == ASTNode.Kinds.Var); //In CSX-lite all IDs should be vars! 
     	id =  (SymbolInfo) st.globalLookup(n.idname);
     	if (id == null) {
            	System.out.println(error(n) +  n.idname + " is not declared.");
@@ -206,7 +210,8 @@ public class TypeChecking extends Visitor {
             n.type = ASTNode.Types.Error;
         } 
     	else {
-            n.type = id.type; 
+            n.type = id.type;
+            n.kind = id.kind;
             n.idinfo = id; // Save ptr to correct symbol table entry
     	}
 	}
@@ -220,7 +225,13 @@ public class TypeChecking extends Visitor {
 
 	void visit(asgNode n){
 		this.visit(n.target);
-        if (n.target.type == ASTNode.Types.Character && n.target.kind == ASTNode.Kinds.Array
+		if (n.target.varName.idinfo == null) {
+		}
+		else if (isUnchangeable(n.target.varName.idinfo.kind)) {
+			typeErrors++;
+			System.out.println(error(n) + "Target of assignment can't be changed.");
+		}
+		else if (n.target.type == ASTNode.Types.Character && n.target.kind == ASTNode.Kinds.Array
         		&& n.source.kind == ASTNode.Kinds.String){
         	//verify array length same as string
         }
@@ -231,6 +242,7 @@ public class TypeChecking extends Visitor {
         		//verify each array has the same length
         	}
         }
+		this.visit(n.source);
 	}
 
 // Extend ifThenNode's method to handle else parts
@@ -422,19 +434,43 @@ public class TypeChecking extends Visitor {
 		 //System.out.println("Type checking for valArgDeclNode not yet implemented");
 	 }
 	 
+	 void scalarErrorCheck(stmtNode n, ASTNode.Kinds kind, String operator) {
+		 if (!isScalar(kind)) {
+			  typeErrors++;
+			  String errorMsg = error(n) + "Operand of " + operator + " must be a scalar.";
+			  System.out.println(errorMsg);
+		  }
+	 }
+	 
 	 void visit(incrementNode n){
+		 this.visit(n.target);
 			LinkedList<ASTNode.Types> types = new LinkedList<ASTNode.Types>();
 			types.add(ASTNode.Types.Integer);
 			types.add(ASTNode.Types.Character);
 			typeMustBeIn(n.target.type, types,
-                	error(n) + "Target of increment must be an int or a char.");
+                	error(n) + "Operand of ++ must be arithmetic.");
+			if (n.target.varName.idinfo != null){
+				scalarErrorCheck(n, n.target.varName.idinfo.kind, "++");
+				if (isUnchangeable(n.target.varName.idinfo.kind)) {
+					typeErrors++;
+					System.out.println(error(n) + "Target of ++ can't be changed.");
+				}
+			}
 	 }
 	 void visit(decrementNode n){
+		 this.visit(n.target);
 		 LinkedList<ASTNode.Types> types = new LinkedList<ASTNode.Types>();
 			types.add(ASTNode.Types.Integer);
 			types.add(ASTNode.Types.Character);
 			typeMustBeIn(n.target.type, types,
-             	error(n) + "Target of decrement must be an int or a char.");
+             	error(n) + "Operand of decrement must be arithmetic.");
+			if (n.target.varName.idinfo != null){
+				scalarErrorCheck(n, n.target.varName.idinfo.kind, "--");
+				if (isUnchangeable(n.target.varName.idinfo.kind)) {
+					typeErrors++;
+					System.out.println(error(n) + "Target of -- can't be changed.");
+				}
+			}
 	 }
 	void visit(argDeclsNode n){
 		this.visit(n.thisDecl);
@@ -458,28 +494,30 @@ public class TypeChecking extends Visitor {
 	}
 	
 	void visit(constDeclNode n){
-		checkDecl(n, n.constName, n.constValue.type);
+		checkDecl(n, n.constName, n.constValue.type, true, ASTNode.Kinds.Value);
 	}
 	
-	boolean checkDecl(declNode n, identNode name, ASTNode.Types type) {
+	boolean checkDecl(declNode n, identNode name, ASTNode.Types type, boolean constant, ASTNode.Kinds kind) {
 		SymbolInfo id;
 		id = (SymbolInfo) st.localLookup(name.idname);
 		try {
-			id = new SymbolInfo(name.idname, ASTNode.Kinds.Var, type);
+			id = new SymbolInfo(name.idname, kind, type, constant);
 			name.type = type;
+			name.kind = kind;
 			name.idinfo=id;
 			st.insert(id);
 		} catch (DuplicateException d) {
-			System.out.println(error(n) + id.name() + " is already declared.");
+			System.out.println(error(n) + name.idname + " is already declared.");
 			typeErrors++;
 			name.type = ASTNode.Types.Error;
+			name.kind = ASTNode.Kinds.Other;
 			return false;
 		}
 		return true;
 	}
 	
 	 void visit(arrayDeclNode n){
-		checkDecl(n, n.arrayName, n.elementType.type);
+		checkDecl(n, n.arrayName, n.elementType.type, false, ASTNode.Kinds.Array);
 		if (n.arraySize.intval <= 0) {
 			typeErrors++;
 			System.out.println(error(n) + n.arrayName.idname + " must have more than 0 elements.");
@@ -552,7 +590,7 @@ public class TypeChecking extends Visitor {
 		  this.visit(n.methodArgs);
 		System.out.println("Type checking for fctCallNode not yet implemented");
 	  }
-
+	  
 	  void visit(unaryOpNode n){
 		  this.visit(n.operand);
 		  if (!isScalar(n.operand.kind)) {

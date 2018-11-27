@@ -12,6 +12,10 @@ class SymbolInfo extends Symb {
  public SymbolInfo(String id, ASTNode.Kinds k, ASTNode.Types t){    
 	super(id);
 	kind = k; type = t;};
+	
+ public SymbolInfo(String id, ASTNode.Kinds k, ASTNode.Types t, boolean cons){    
+		super(id);
+		kind = k; type = t;};
 // public SymbolInfo(String id, int k, int t){
 //	super(id);
 //	kind = new Kinds(k); type = new Types(t);};
