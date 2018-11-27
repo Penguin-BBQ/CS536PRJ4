@@ -377,6 +377,7 @@ class methodDeclNode extends ASTNode {
 // abstract superclass; only subclasses are actually created
 abstract class argDeclNode extends ASTNode {
 		public ASTNode.Types type;
+		public ASTNode.Kinds kind;
         argDeclNode(){super();};
         argDeclNode(int l,int c){super(l,c);};
         public boolean equalsType(Object o) {

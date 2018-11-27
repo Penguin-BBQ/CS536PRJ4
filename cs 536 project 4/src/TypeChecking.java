@@ -572,7 +572,10 @@ public class TypeChecking extends Visitor {
 
 	
 	void visit(valArgDeclNode n){
+		visit(n.argType);
+		visit(n.argName);
 		n.type = n.argType.type;
+		n.kind = ASTNode.Kinds.ScalarParm;
 		try {
 			st.insert(new SymbolInfo(n.argName.idname,n.argName.kind,n.argType.type));
 		} catch (DuplicateException e) {
@@ -582,7 +585,10 @@ public class TypeChecking extends Visitor {
 	}
 	
 	void visit(arrayArgDeclNode n){
+		visit(n.elementType);
+		visit(n.argName);
 		n.type = n.elementType.type;
+		n.kind = ASTNode.Kinds.ArrayParm;
 		try {
 			st.insert(new SymbolInfo(n.argName.idname,n.argName.kind,n.elementType.type));
 		} catch (DuplicateException e) {
@@ -673,14 +679,23 @@ public class TypeChecking extends Visitor {
 	}
 	
 	boolean isArgValid(argsNode args, int count, List<argDeclNode> methodArgs) {
-		ASTNode.Types type = args.argVal.type;
+		/*if (args.linenum == 103) {
+			System.out.println("hi");
+		}*/
 		
 		if (count >= methodArgs.size()) {
 			return false;
 		}
 		
+		ASTNode.Types type = args.argVal.type;
+		ASTNode.Kinds kind = args.argVal.kind;
 		argDeclNode node = methodArgs.get(count);
-		return type.equals(node.type);
+		if (isScalar(node.kind)) {
+			return type.equals(node.type) && isScalar(kind);
+		}
+		else {
+			return type.equals(node.type) && !isScalar(kind);
+		}
 	}
 	
 	boolean isMethodRight(SymbolInfo method, callNode n) {
@@ -718,7 +733,7 @@ public class TypeChecking extends Visitor {
 				}
 				if (!isArgValid((argsNode) args, argsCount, method.methodArgs)) {
 					typeErrors++;
-					System.out.println(error(n) + "In the call to " + n.methodName.idname + ", parameter " + argsCount + " has incorrect type.");
+					System.out.println(error(n) + "In the call to " + n.methodName.idname + ", parameter " + (argsCount + 1) + " has incorrect type.");
 				}
 				argsCount++;
 				args = ((argsNode) args).moreArgs; 
