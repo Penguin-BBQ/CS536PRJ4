@@ -1,5 +1,7 @@
 import java.util.*;
 
+import com.sun.org.apache.xalan.internal.utils.XMLSecurityManager.NameMap;
+
 // The following methods type check  AST nodes used in CSX Lite
 //  You will need to complete the methods after line 238 to type check the
 //   rest of CSX
@@ -497,15 +499,21 @@ public class TypeChecking extends Visitor {
 
 	
 	void visit(valArgDeclNode n){
-		this.visit(n.argName);
-		this.visit(n.argType);
-		System.out.println("Type checking for valArgDeclNode not yet implemented");
+		try {
+			st.insert(new SymbolInfo(n.argName.idname,n.argName.kind,n.argType.type));
+		} catch (DuplicateException e) {
+			typeErrors++;
+			System.out.println(error(n) + ": Duplicate variable");
+		}
 	}
 	
 	void visit(arrayArgDeclNode n){
-		this.visit(n.argName);
-		this.visit(n.elementType);
-		System.out.println("Type checking for arrayArgDeclNode not yet implemented");
+		try {
+			st.insert(new SymbolInfo(n.argName.idname,n.argName.kind,n.elementType.type));
+		} catch (DuplicateException e) {
+			typeErrors++;
+			System.out.println(error(n) + ": Duplicate variable");
+		}
 	}
 	
 	void visit(constDeclNode n){
