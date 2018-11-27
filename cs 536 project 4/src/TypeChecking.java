@@ -34,16 +34,19 @@ public class TypeChecking extends Visitor {
 		}
 		return argList;
 	}
-	private void checkOverloadedTypes(methodDeclNode thisDecl) {
+	private boolean checkOverloadedTypes(methodDeclNode thisDecl) {
 		SymbolInfo master = (SymbolInfo) st.localLookup(thisDecl.name.idname);
 		if(master != null) {
 			if(master.type != thisDecl.returnType.type) {
 				typeErrors++;
 				System.out.println(error(thisDecl) 
-						+ "Overloaded methods must have the same type as the original method");
+						+ thisDecl.name.idname + " is already declared");
+				return false; //return false for non-matching overloads
 			}
 			
 		}
+		
+		return true;
 		
 	}
 	boolean isScalar(ASTNode.Kinds kind){
@@ -467,11 +470,21 @@ public class TypeChecking extends Visitor {
 		 while (true) {
 			 ArrayList<argDeclNode> argList = TypeChecking.buildArgList(temp);
 			 try {
-				 this.checkOverloadedTypes(temp.thisDecl);
-				 st.insert(new SymbolInfo(temp.thisDecl.name.idname, ASTNode.Kinds.Method, temp.thisDecl.returnType.type, argList));
+				 if(this.checkOverloadedTypes(temp.thisDecl)) {
+					 st.insert(new SymbolInfo(temp.thisDecl.name.idname, ASTNode.Kinds.Method, temp.thisDecl.returnType.type, argList));
+				 }
+				 else {
+					 if(temp.moreDecls.isNull()) {
+						 break;
+					 }
+					 temp = (methodDeclsNode) temp.moreDecls;
+					 continue;
+				 }
+				 
 			 } catch (DuplicateException e) {
 				 typeErrors ++;
-				 System.out.println(error(temp.thisDecl) + "Method name already used");
+				 System.out.println(error(temp.thisDecl) + temp.thisDecl.name.idname + 
+						 " is already declared.");
 				 
 			 }
 			 this.typeMustBeIn(temp.thisDecl.returnType.type, requiredTypes, "Illegal method return type");
