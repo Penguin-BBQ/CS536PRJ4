@@ -215,7 +215,6 @@ public class TypeChecking extends Visitor {
 
 // Extend varDeclNode's method to handle initialization
 	void visit(varDeclNode n){
-		//Chayce is working on
 		if (checkDecl(n, n.varName, n.varType.type, false, ASTNode.Kinds.Var, -1)) {
 			if (!n.initValue.isNull() && (n.varType.type != ((exprNode) n.initValue).type)) {
         		typeErrors++;
