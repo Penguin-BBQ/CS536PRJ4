@@ -516,7 +516,7 @@ public class TypeChecking extends Visitor {
 		SymbolInfo id;
 		id = (SymbolInfo) st.localLookup(name.idname);
 		try {
-			id = new SymbolInfo(name.idname, kind, type, constant);
+			id = new SymbolInfo(name.idname, kind, type);
 			name.type = type;
 			name.kind = kind;
 			name.idinfo=id;
