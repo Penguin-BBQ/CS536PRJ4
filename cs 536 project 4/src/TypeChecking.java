@@ -40,7 +40,7 @@ public class TypeChecking extends Visitor {
 			if(master.type != thisDecl.returnType.type) {
 				typeErrors++;
 				System.out.println(error(thisDecl) 
-						+ " Overloaded methods must have the same type as the original method");
+						+ "Overloaded methods must have the same type as the original method");
 			}
 			
 		}
