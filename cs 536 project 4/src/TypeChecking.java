@@ -513,8 +513,6 @@ public class TypeChecking extends Visitor {
 		 this.visit(n.returnType);
 		 this.visit(n.decls);
 		 this.visit(n.stmts);
-		 
-		 //System.out.println("Type checking for valArgDeclNode not yet implemented");
 	 }
 	 
 	 void scalarErrorCheck(stmtNode n, ASTNode.Kinds kind, String operator) {
@@ -558,7 +556,7 @@ public class TypeChecking extends Visitor {
 	void visit(argDeclsNode n){
 		this.visit(n.thisDecl);
 		this.visit(n.moreDecls);
-		System.out.println("Type checking for valArgDeclNode not yet implemented");
+		//System.out.println("Type checking for argDeclsNode not yet implemented");
 	}
 
 	void visit(nullArgDeclsNode n){}
