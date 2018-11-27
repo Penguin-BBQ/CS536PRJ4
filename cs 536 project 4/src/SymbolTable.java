@@ -2,25 +2,38 @@
 //You may use this symbol table implementation or your own (from project 1)
 //
 import java.util.*;
+
+import jdk.nashorn.internal.ir.Labels;
+
 import java.io.*;
 class SymbolTable {
+	
    class Scope {
       Hashtable<String,Symb> currentScope;
+      
       Scope next;
       Scope() {
          currentScope = new Hashtable<String,Symb>();
          next = null;
+         labels = new ArrayList<identNode>();
       }
       Scope(Scope scopes) {
          currentScope = new Hashtable<String,Symb>();
          next = scopes;
+         labels = new ArrayList<identNode>();
       }
    }
-
+   
+   List<identNode> labels;
    private Scope top;
 
    SymbolTable() {top = new Scope();}
-
+   public void addLabel(identNode label) {
+	   labels.add(label);
+   }
+   public void removeLavel(identNode label) {
+	   labels.remove(label);
+   }
    public void openScope() {
       top = new Scope(top); }
 

@@ -1,8 +1,10 @@
 class node{
+void main() {
+int i;
+while (true) {
 
-void test3(int i, int d){
 }
-
+}
 void test3(int i, int d){
 }
 
