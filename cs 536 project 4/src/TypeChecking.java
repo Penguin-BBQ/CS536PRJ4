@@ -332,8 +332,7 @@ public class TypeChecking extends Visitor {
 	  
 	 void visit(printNode n){
 		 this.visit(n.outputValue);
-		 String errorMsg = error(n) + "Only int, bool, char, char arrays, and string literal"
-		 		+ " values may be printed in CSX.";
+		 String errorMsg = error(n) + "Only integers, booleans, strings, characters and character arrays may be written.";
 		 if (n.outputValue.kind == ASTNode.Kinds.Array){
 			 typeMustBe(n.outputValue.type, ASTNode.Types.Character, errorMsg);
 		 }
@@ -343,8 +342,7 @@ public class TypeChecking extends Visitor {
 			 types.add(ASTNode.Types.Integer);
 			 types.add(ASTNode.Types.Character);
 			 types.add(ASTNode.Types.Boolean);
-			 typeMustBeIn(n.outputValue.type, types,
-					error(n) + "Only int values may be printed in CSX-lite.");
+			 typeMustBeIn(n.outputValue.type, types, errorMsg);
 		 }
 		 this.visit(n.morePrints);
 	  }
@@ -670,7 +668,11 @@ public class TypeChecking extends Visitor {
 	  
 	  void visit(readNode n){
 		 this.visit(n.targetVar);
-		 String errorMsg = error(n) + "Only int, and char values may be read";
+		 if (isUnchangeable(n.targetVar.kind) || n.targetVar.kind == ASTNode.Kinds.Array) {
+			 typeErrors++;
+			 System.out.println(error(n) + n.targetVar.varName.idname + " may not be assigned to.");
+		 }
+		 String errorMsg = error(n) + "Only integers and characters may be read.";
 		 LinkedList<ASTNode.Types> types = new LinkedList<ASTNode.Types>();
 		 types.add(ASTNode.Types.Integer);
 		 types.add(ASTNode.Types.Character);
@@ -680,6 +682,7 @@ public class TypeChecking extends Visitor {
 	  
 
 	  void visit(returnNode n){
+		  // calvin working on return node
 		  this.visit(n.returnVal);
 		System.out.println("Type checking for returnNode not yet implemented");
 	  }
