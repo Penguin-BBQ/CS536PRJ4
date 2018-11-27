@@ -390,11 +390,22 @@ public class TypeChecking extends Visitor {
 	 void visit(classNode n){
 		 st.openScope();
 		 this.visit(n.members);
-		 //No type checking needed
+		 //No type checking needed 
 		 
 		}
 
 	 void  visit(memberDeclsNode n){
+		 //Build list of methods
+		 methodDeclsNode temp = (methodDeclsNode) n.methods;
+		 while (!temp.moreDecls.isNull()) {
+			 try {
+				 st.insert(new SymbolInfo(temp.thisDecl.name.idname, ASTNode.Kinds.Method, temp.thisDecl.name.type));
+			 } catch (DuplicateException e) {
+				 System.out.println(e.getMessage());
+			 }
+			 
+			 temp = (methodDeclsNode) temp.moreDecls;
+		 }
 		 this.visit(n.fields);
 		 this.visit(n.methods);
 		 System.out.println("Type checking for valArgDeclNode not yet implemented");
@@ -418,12 +429,12 @@ public class TypeChecking extends Visitor {
 	 void visit(nullMethodDeclsNode n){}
 
 	 void visit(methodDeclNode n){
-		 st.openScope();
 		 this.visit(n.args);
 		 this.visit(n.returnType);
 		 this.visit(n.decls);
 		 this.visit(n.stmts);
-		 System.out.println("Type checking for valArgDeclNode not yet implemented");
+		 
+		 //System.out.println("Type checking for valArgDeclNode not yet implemented");
 	 }
 	 
 	 void visit(incrementNode n){

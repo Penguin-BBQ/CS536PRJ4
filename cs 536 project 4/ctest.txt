@@ -1,0 +1,10 @@
+class node{
+
+int test(){
+	test1();
+}
+
+int test1(){
+
+}
+}
