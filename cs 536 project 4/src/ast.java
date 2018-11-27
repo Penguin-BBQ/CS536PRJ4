@@ -379,6 +379,9 @@ abstract class argDeclNode extends ASTNode {
 
         argDeclNode(){super();};
         argDeclNode(int l,int c){super(l,c);};
+        public boolean equalsType(Object o) {
+        	return false;
+        }
 };
 
 
@@ -430,13 +433,12 @@ class arrayArgDeclNode extends argDeclNode {
         }
 
 	void accept(Visitor u) { u.visit(this); }
-	@Override
-	public boolean equals(Object n) {
+	public boolean equalsType(Object n) {
 		if(n.getClass() != this.getClass()) {
 			return false;
 		}
 		arrayArgDeclNode temp = (arrayArgDeclNode) n;
-		if(temp.argName != this.argName || temp.elementType != this.elementType) {
+		if(temp.elementType.equals(this.elementType)) {
 			return false;
 		}
 			
@@ -457,14 +459,12 @@ class valArgDeclNode extends argDeclNode {
         }
 
 	void accept(Visitor u) { u.visit(this); }
-	@Override
-	public boolean equals(Object n) {
+	public boolean equalsType(Object n) {
 		if(n.getClass() != this.getClass()) {
 			return false;
 		}
 		valArgDeclNode temp = (valArgDeclNode) n;
-		if(!temp.argName.idname.equals(this.argName.idname) 
-				|| !temp.argType.type.equals(this.argType.type)) {
+		if(!temp.argType.type.equals(this.argType.type)) {
 			return false;
 		}
 			

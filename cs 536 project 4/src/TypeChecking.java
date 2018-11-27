@@ -688,10 +688,9 @@ public class TypeChecking extends Visitor {
 
 	  
 	  void visit(argsNode n){
-		  //Chayce working on it
+		  //Shouldn't need type checking, handled lower
 		  this.visit(n.argVal);
 		  this.visit(n.moreArgs);
-		System.out.println("Type checking for argsNode not yet implemented");
 	  }
 	  	
 	  void visit(nullArgsNode n){}

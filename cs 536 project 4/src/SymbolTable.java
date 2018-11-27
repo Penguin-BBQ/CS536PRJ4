@@ -62,7 +62,7 @@ class SymbolTable {
     		 for (int i = 0; i < sSI.methodArgs.size(); i++) {
     			 argDeclNode getExisting = checkKey.methodArgs.get(i);
     			 argDeclNode getNew = sSI.methodArgs.get(i);
-    			 if(!getExisting.equals(getNew)) {
+    			 if(!getExisting.equalsType(getNew)) {
     				 checkKey.overLoadedMethods.add((SymbolInfo) s);
             		 return; 
     			 }

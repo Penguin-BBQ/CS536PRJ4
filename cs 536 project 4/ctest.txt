@@ -2,7 +2,8 @@ class node{
 void main() {
 int i;
 }
-void test3(int i, int d){
-}
+void test3(int i, int d []){
 
+}
+void test3(int d, int h []){}
 }
