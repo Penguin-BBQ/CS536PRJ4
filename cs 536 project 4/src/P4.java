@@ -34,7 +34,7 @@ public class P4 {
 
     parser csxParser = new parser(); 
 
-    System.out.println ("\n\n" + "Begin CSX compilation of " +
+    System.out.println ("Chayce Ririe, Calvin Price\n\n" + "Begin CSX compilation of " +
 			fileName + ".\n");
     Symbol root=null;
     try {
