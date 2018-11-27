@@ -441,6 +441,7 @@ public class TypeChecking extends Visitor {
 	 void visit(nullMethodDeclsNode n){}
 
 	 void visit(methodDeclNode n){
+		 st.openScope();
 		 this.visit(n.args);
 		 this.visit(n.returnType);
 		 this.visit(n.decls);
