@@ -12,19 +12,21 @@ class SymbolTable {
 	
    class Scope {
       Hashtable<String,Symb> currentScope;
-      
+      public List<identNode> labels;
       Scope next;
       Scope() {
          currentScope = new Hashtable<String,Symb>();
          next = null;
+         this.labels = new ArrayList<identNode>();
       }
       Scope(Scope scopes) {
          currentScope = new Hashtable<String,Symb>();
          next = scopes;
+         this.labels = new ArrayList<identNode>();
       }
    }
    
-   List<identNode> labels;
+   
    private Scope top;
    private Scope bottom;
    public methodDeclNode currentMethod;
@@ -36,15 +38,14 @@ class SymbolTable {
    SymbolTable() {
 	   top = new Scope(); 
 	   bottom = top;
-	   labels = new ArrayList<identNode>();
 	   }
    
    public void addLabel(identNode label) {
-	   labels.add(label);
+	   this.top.labels.add(label);
    }
    
    public void removeLavel(identNode label) {
-	   labels.remove(label);
+	   this.top.labels.remove(label);
    }
    
    public void openScope() {
@@ -75,7 +76,7 @@ class SymbolTable {
 
    public void insert(Symb s)
          throws DuplicateException{//, EmptySTException {
-      String key = (s.name().toLowerCase());
+      String key = (s.name().toLowerCase()); 
       //if (top == null)
         // throw new EmptySTException();
       SymbolInfo checkKey = (SymbolInfo) localLookup(key);

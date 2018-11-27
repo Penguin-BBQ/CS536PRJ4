@@ -3,7 +3,11 @@ void main() {
 int i;
 }
 void test3(int i, int d []){
- return 1;
-}
-void test3(int d, int h []){}
+ Hi: while(true){
+ 	hey: while(true) {
+ 		continue Hi;
+ 	}
+ 	continue Hi;
+ }
+ }
 }
