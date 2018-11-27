@@ -37,11 +37,6 @@ abstract class ASTNode {
 	boolean   isNull(){return false;}; // Is this node null?
 
     abstract void accept(Visitor v);// Will be defined in sub-classes    
-    	
-    // default action on an AST node is to record no declarations and no identifier uses
-   	 void countDeclsAndUses(ScopeInfo currentScope){ 
-   		return;
-   	}
 };
 
 
@@ -51,53 +46,15 @@ class csxLiteNode extends ASTNode {
 	
 	public final fieldDeclsOption	progDecls;
 	public final stmtsOption 	progStmts;
-	private ScopeInfo  		 scopeList;
 	
 	csxLiteNode(fieldDeclsOption decls, stmtsOption stmts, int line, int col){      
 		super(line,col);
 		progDecls=decls;
 		progStmts=stmts;
-		scopeList=null;
 	}; 
 	
 	
 	void accept(Visitor u){ u.visit(this); }
-	
-	// This method begins the count declarations and uses analysis.
-	//  It first creates a ScopeInfo node for the entire program.
-	//  It then passes this ScopeInfo node to the declarations subtree and then
-	//   the statements subtree. Visiting these two subtrees causes all identifier uses and
-	//     declarations to be recognized and recorded in the list rooted by the ScopeInfo node.
-	//  Finally, the information stored in the ScopeInfo list is converted to string form
-	//   and returned to the caller of the analysis.
-	
-	 String countDeclsAndUses(){
-		 scopeList = new ScopeInfo(1,linenum);
-		 progDecls.countDeclsAndUses(scopeList);
-		 progStmts.countDeclsAndUses(scopeList);
-		 return scopeList.toString();
-	 }
-	 
-	/**
-	 * Builds the cross reference information for the CSX Lite program by traversing the scope list
-	 * and obtaining all the information about declarations and usages
-	 * @return A string with all identifier declarations and uses for the program
-	 */
-	String buildCrossReferences(){
-		ReferenceBuilder references = new ReferenceBuilder();
-		countDeclsAndUses(); // Count uses to build the symbol tables
-		
-		// traverse the scopes to collect all the identifier information
-		ScopeInfo tmpScope = scopeList;
-		while (tmpScope != null){
-			references.addIdTable(tmpScope.vars);
-			references.addIllegal(tmpScope.illegal);
-			references.addUndeclared(tmpScope.undeclared);
-			tmpScope = tmpScope.next;
-		}
-		return references.toString();
-	}
-	 
 };
 
 // Root of all ASTs for CSX
@@ -154,12 +111,6 @@ class fieldDeclsNode extends fieldDeclsOption {
 	}
 
 	void accept(Visitor u){ u.visit(this);}
-
-	void countDeclsAndUses(ScopeInfo currentScope){
-		thisField.countDeclsAndUses(currentScope);
-		moreFields.countDeclsAndUses(currentScope);
-		return;
-	}
 };
 
 class nullFieldDeclsNode extends fieldDeclsOption {
@@ -169,10 +120,6 @@ class nullFieldDeclsNode extends fieldDeclsOption {
 	boolean   isNull(){return true;};
 
 	void accept(Visitor u){ u.visit(this);}
-
-	void countDeclsAndUses(ScopeInfo currentScope){
-			return;
-		}
 };
 
 // abstract superclass; only subclasses are actually created
@@ -197,16 +144,6 @@ class varDeclNode extends declNode {
 	}
 	
 	void accept(Visitor u){ u.visit(this);}
-	
-	// This node represents a variable declaration, so we increment the declarations
-		//  count by 1
-		void countDeclsAndUses(ScopeInfo currentScope){
-			// add declaration to scope's symbol table. If already exists, reset the type to illegal
-			if (!currentScope.addDecl(this)){
-				varType = new illegalTypeNode(linenum, colnum);
-			}
-			return;
-		}
 };
 
 class constDeclNode extends declNode {
@@ -539,7 +476,6 @@ class nullStmtNode extends stmtOption {
 	nullStmtNode(){};
 	boolean   isNull(){return true;};
 	void accept(Visitor u){ u.visit(this);}
-	void countDeclsAndUses(ScopeInfo currentScope){return;}
 };
 
 abstract class stmtsOption extends ASTNode{
@@ -562,13 +498,6 @@ class stmtsNode extends stmtsOption {
 	};
 	
 	void accept(Visitor u){ u.visit(this);}
-	
-	void countDeclsAndUses(ScopeInfo currentScope){
-		 // Count decls and uses in both subtrees:
-			 thisStmt.countDeclsAndUses(currentScope);
-			 moreStmts.countDeclsAndUses(currentScope);
-			}
-
 };
 
 
@@ -578,8 +507,6 @@ class nullStmtsNode extends stmtsOption {
 	boolean   isNull(){return true;};
 
 	void accept(Visitor u){ u.visit(this);}
-	
-	void countDeclsAndUses(ScopeInfo currentScope){return;}
 };
 
 class asgNode extends stmtNode {      
@@ -594,13 +521,6 @@ class asgNode extends stmtNode {
 	};
 	
 	void accept(Visitor u){ u.visit(this);}
-	
-	void countDeclsAndUses(ScopeInfo currentScope){
-		// The target of the assign counts as 1 use
-		currentScope.addUse(target.varName.idname, linenum);
-		// Visit the source expression to include the identifiers in it
-		source.countDeclsAndUses(currentScope);
-		}
 };
 
 class incrementNode extends stmtNode {      
@@ -649,13 +569,6 @@ class ifThenNode extends stmtNode {
 	
 	
 	void accept(Visitor u){ u.visit(this);}
-	
-	void countDeclsAndUses(ScopeInfo currentScope){
-		// Count identifier uses in control expression and then statement.
-		// In CSX Lite the else statement is always null
-		condition.countDeclsAndUses(currentScope);
-		thenPart.countDeclsAndUses(currentScope);
-		}
 };
 
 class whileNode extends stmtNode {
@@ -802,18 +715,6 @@ class blockNode extends stmtNode {
 	}
 	
 	 void accept(Visitor u){ u.visit(this);}
-
-	 
-	 void countDeclsAndUses(ScopeInfo currentScope){
-			/* A block opens a new scope, so a new ScopeInfo node is created.
-			   It is appended to the end of the ScopeInfo list.
-			   The new scope is used to record local declarations and uses in the block
-			*/ 
-			 ScopeInfo  localScope = new ScopeInfo(linenum);
-			 ScopeInfo.append(currentScope,localScope);
-			 decls.countDeclsAndUses(localScope);
-			 stmts.countDeclsAndUses(localScope);
-		}
 };
 
 class breakNode extends stmtNode {
@@ -936,12 +837,6 @@ class binaryOpNode extends exprNode {
 	};
 
 	void accept(Visitor u){ u.visit(this);}
-
-	// Count identifier uses in left and right operands
-	 void countDeclsAndUses(ScopeInfo currentScope){
-			leftOperand.countDeclsAndUses(currentScope);
-			rightOperand.countDeclsAndUses(currentScope);
-		}
 };
 
 
@@ -1010,11 +905,6 @@ class identNode extends exprNode {
 	static identNode NULL = new identNode(true);
 
 	void accept(Visitor u){ u.visit(this);}
-	
-	//One identifier used here:
-	void countDeclsAndUses(ScopeInfo currentScope){
-		currentScope.addUse(idname, linenum);
-	}
 };
 
 class nameNode extends exprNode {
