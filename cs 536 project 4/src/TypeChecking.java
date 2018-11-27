@@ -759,15 +759,15 @@ public class TypeChecking extends Visitor {
 
 	
 	void visit(trueNode n){
-		System.out.println("Type checking for trueNode not yet implemented");
+		//System.out.println("Type checking for trueNode not yet implemented");
 	}
 
 	void visit(falseNode n){
-		System.out.println("Type checking for falseNode not yet implemented");
+		//System.out.println("Type checking for falseNode not yet implemented");
 	}
 
 	void visit(bitStringNode n){
-		System.out.println("Type checking for bitStringNode not yet implemented");
+		//System.out.println("Type checking for bitStringNode not yet implemented");
 	}
 
 	@Override
