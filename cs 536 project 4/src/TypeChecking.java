@@ -566,7 +566,7 @@ public class TypeChecking extends Visitor {
 		System.out.println("Type checking for charTypeNode not yet implemented");
 	}
 	void visit(voidTypeNode n){
-		System.out.println("Type checking for voidTypeNode not yet implemented");
+		//Shouldn't need type checking
 	}
 
 	void visit(whileNode n){

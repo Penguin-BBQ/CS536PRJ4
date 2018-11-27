@@ -38,17 +38,25 @@ class SymbolTable {
       SymbolInfo checkKey = (SymbolInfo) localLookup(key);
       if (checkKey != null)
       {
+    	  //Add method overloading
     	 if(checkKey.kind == ASTNode.Kinds.Method)
     	 {
     		 SymbolInfo sSI = (SymbolInfo) s;
-    		 if(sSI.methodArgs.equals(checkKey.methodArgs)) {
-    			 throw new DuplicateException();
-    		 }
-    		 else
-        	 {
-        		 checkKey.overLoadedMethods.add((SymbolInfo) s);
+    		 if(sSI.methodArgs.size() != checkKey.methodArgs.size()) {
+    			 checkKey.overLoadedMethods.add((SymbolInfo) s);
         		 return;
-        	 } 
+    		 }
+    		 for (int i = 0; i < sSI.methodArgs.size(); i++) {
+    			 argDeclNode getExisting = checkKey.methodArgs.get(i);
+    			 argDeclNode getNew = sSI.methodArgs.get(i);
+    			 if(!getExisting.equals(getNew)) {
+    				 checkKey.overLoadedMethods.add((SymbolInfo) s);
+            		 return; 
+    			 }
+    			 
+    		 }
+    		 //We went through the whole list all arguments were the same, so duplicate
+    		 throw new DuplicateException();
     	 }
          throw new DuplicateException();
       }

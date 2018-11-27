@@ -430,6 +430,18 @@ class arrayArgDeclNode extends argDeclNode {
         }
 
 	void accept(Visitor u) { u.visit(this); }
+	@Override
+	public boolean equals(Object n) {
+		if(n.getClass() != this.getClass()) {
+			return false;
+		}
+		arrayArgDeclNode temp = (arrayArgDeclNode) n;
+		if(temp.argName != this.argName || temp.elementType != this.elementType) {
+			return false;
+		}
+			
+		return true;
+	}
 };
 
 
@@ -445,6 +457,19 @@ class valArgDeclNode extends argDeclNode {
         }
 
 	void accept(Visitor u) { u.visit(this); }
+	@Override
+	public boolean equals(Object n) {
+		if(n.getClass() != this.getClass()) {
+			return false;
+		}
+		valArgDeclNode temp = (valArgDeclNode) n;
+		if(!temp.argName.idname.equals(this.argName.idname) 
+				|| !temp.argType.type.equals(this.argType.type)) {
+			return false;
+		}
+			
+		return true;
+	}
 };
 
 

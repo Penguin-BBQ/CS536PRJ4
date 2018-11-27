@@ -1,20 +1,9 @@
 class node{
 
-int test(){
-	test1();
-}
-
-char test1(){
-
-}
-
-bool test2(){
-}
-
 void test3(int i, int d){
 }
 
-int test3(int i){
+void test3(int i, int d){
 }
 
 }

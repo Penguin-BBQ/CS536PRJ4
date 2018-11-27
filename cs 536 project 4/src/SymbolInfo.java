@@ -32,4 +32,3 @@ public SymbolInfo(String id, ASTNode.Kinds k, ASTNode.Types t, List<argDeclNode>
  public String toString(){
              return "("+name()+": kind=" + kind+ ", type="+  type+")";};
 }
-
