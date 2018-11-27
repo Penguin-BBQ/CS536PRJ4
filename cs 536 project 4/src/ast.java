@@ -376,7 +376,7 @@ class methodDeclNode extends ASTNode {
 
 // abstract superclass; only subclasses are actually created
 abstract class argDeclNode extends ASTNode {
-
+		public ASTNode.Types type;
         argDeclNode(){super();};
         argDeclNode(int l,int c){super(l,c);};
         public boolean equalsType(Object o) {
@@ -797,7 +797,7 @@ class continueNode extends stmtNode {
 abstract class argsNodeOption extends ASTNode {
 	argsNodeOption(){super();};
 	argsNodeOption(int l,int c){super(l,c);};
-
+	boolean isNull() {return false;};
         static nullArgsNode NULL = new nullArgsNode();
 };
 

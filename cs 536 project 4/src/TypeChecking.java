@@ -447,9 +447,7 @@ public class TypeChecking extends Visitor {
 	void visit(intLitNode n){
 	//      All intLits are automatically type-correct
 	}
-
-
- 
+	
 // Extend these unparsing methods to correctly unparse CSX AST nodes
 	 
 	 void visit(classNode n){
@@ -574,6 +572,7 @@ public class TypeChecking extends Visitor {
 
 	
 	void visit(valArgDeclNode n){
+		n.type = n.argType.type;
 		try {
 			st.insert(new SymbolInfo(n.argName.idname,n.argName.kind,n.argType.type));
 		} catch (DuplicateException e) {
@@ -583,6 +582,7 @@ public class TypeChecking extends Visitor {
 	}
 	
 	void visit(arrayArgDeclNode n){
+		n.type = n.elementType.type;
 		try {
 			st.insert(new SymbolInfo(n.argName.idname,n.argName.kind,n.elementType.type));
 		} catch (DuplicateException e) {
@@ -671,21 +671,98 @@ public class TypeChecking extends Visitor {
 		this.visit(n.label);
 		System.out.println("Type checking for continueNode not yet implemented");
 	}
-	  
+	
+	boolean isArgValid(argsNode args, int count, List<argDeclNode> methodArgs) {
+		ASTNode.Types type = args.argVal.type;
+		
+		if (count >= methodArgs.size()) {
+			return false;
+		}
+		
+		argDeclNode node = methodArgs.get(count);
+		return type.equals(node.type);
+	}
+	
+	boolean isMethodRight(SymbolInfo method, callNode n) {
+		if (method.methodArgs == null) {
+			return n.args.isNull();
+		}
+		else {
+			int argsCount = 0;
+			argsNodeOption args = n.args;
+			while (!args.isNull()) {
+				if (!isArgValid((argsNode) args, argsCount, method.methodArgs)) {
+					return false;
+				}
+				argsCount++;
+				args = ((argsNode) args).moreArgs; 
+			}
+			return argsCount == method.methodArgs.size();
+		}
+	}
+	
+	void printIsMethodRight(SymbolInfo method, callNode n) {
+		if (method.methodArgs == null) {
+			if (!n.args.isNull()) {
+				typeErrors++;
+				System.out.println(error(n) + n.methodName.idname + " requires 0 parameters.");
+			}
+		}
+		else {
+			int argsCount = 0;
+			argsNodeOption args = n.args;
+			while (!args.isNull()) {
+				if (argsCount >= method.methodArgs.size()) {
+					argsCount++;
+					break;
+				}
+				if (!isArgValid((argsNode) args, argsCount, method.methodArgs)) {
+					typeErrors++;
+					System.out.println(error(n) + "In the call to " + n.methodName.idname + ", parameter " + argsCount + " has incorrect type.");
+				}
+				argsCount++;
+				args = ((argsNode) args).moreArgs; 
+			}
+			if (argsCount != method.methodArgs.size()) {
+				typeErrors++;
+				System.out.println(error(n) + n.methodName.idname + " requires " + method.methodArgs.size() + " parameters.");
+			}
+		}
+	}
+	
+	SymbolInfo findRightMethod(SymbolInfo method, callNode n) {
+		if (isMethodRight(method, n)) {
+			return method;
+		}
+		for (SymbolInfo overload : method.overLoadedMethods) {
+			if (isMethodRight(overload, n)) {
+				return overload;
+			}
+		}
+		return null;
+	}
+	
 	void visit(callNode n){
 		//calvin working on callNode
 		this.visit(n.methodName);
 		this.visit(n.args);
 		SymbolInfo method = (SymbolInfo) st.findBottomSymbol(n.methodName.idname);
-		if (method == null) {
-			// will already be handled by visiting
-		}
+		if (method == null) {}// will already be handled by visiting
 		else if (!method.kind.equals(ASTNode.Kinds.Method)) {
 			typeErrors++;
 			System.out.println(error(n) + n.methodName.idname + " isn't a method.");
 		}
 		else {
-			
+			if (method.overLoadedMethods.size() == 0) {
+				printIsMethodRight(method, n);
+			}
+			else {
+				SymbolInfo match = findRightMethod(method, n);
+				if (match == null) {
+					typeErrors++;
+					System.out.println(error(n) + "None of the " + method.overLoadedMethods.size() + 1 + " definitions of method " + n.methodName + " match the parameters in this call.");
+				}
+			}
 		}
 	}
 
