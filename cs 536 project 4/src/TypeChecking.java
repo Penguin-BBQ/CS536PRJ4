@@ -538,10 +538,43 @@ public class TypeChecking extends Visitor {
 			 typeErrors ++;
 			 System.out.println(error(n) + "Class must contain a main method of type void");
 		 }
+		 //Start type checking the args
+		 temp = (methodDeclsNode) n.methods;
+		 while (true) {
+			 ArrayList<argDeclNode> argList = TypeChecking.buildArgList(temp, this);
+			 this.CheckArgs(argList, error(temp));
+			 if(temp.moreDecls.isNull()) {
+				 break;
+			 }
+			 temp = (methodDeclsNode) temp.moreDecls;
+		 }
 		 this.visit(n.methods);
 	 }
 	 
 	 
+	private void CheckArgs(ArrayList<argDeclNode> argList, String errorLine) {
+		Hashtable<String,ASTNode.Types> tableOfArgs = new Hashtable<String,ASTNode.Types>();
+		for(int i = 0; i < argList.size(); i++) {
+			argDeclNode currentArg = argList.get(i);
+			if(currentArg.getClass() == valArgDeclNode.class) {
+				valArgDeclNode argNode = (valArgDeclNode) currentArg;
+				if(tableOfArgs.containsKey(argNode.argName.idname)) {
+					System.out.println(errorLine + argNode.argName.idname + " is already declared.");
+					typeErrors++;
+				}
+				tableOfArgs.put(argNode.argName.idname, argNode.argType.type);
+			}
+			if(currentArg.getClass() == arrayArgDeclNode.class) {
+				arrayArgDeclNode argNode = (arrayArgDeclNode) currentArg;
+				if(tableOfArgs.containsKey(argNode.argName.idname)) {
+					System.out.println(errorLine + argNode.argName.idname + " is already declared.");
+					typeErrors++;
+				}
+				tableOfArgs.put(argNode.argName.idname, argNode.elementType.type);
+			}
+		}
+	}
+
 	void  visit(methodDeclsNode n){
 		 this.visit(n.thisDecl);
 		 this.visit(n.moreDecls);
@@ -624,8 +657,7 @@ public class TypeChecking extends Visitor {
 		try {
 			st.insert(new SymbolInfo(n.argName.idname,n.kind,n.type));
 		} catch (DuplicateException e) {
-			typeErrors++;
-			System.out.println(error(n) + n.argName.idname + " is already declared.");
+			
 		}
 	}
 	
@@ -636,8 +668,7 @@ public class TypeChecking extends Visitor {
 		try {
 			st.insert(new SymbolInfo(n.argName.idname,n.kind,n.type));
 		} catch (DuplicateException e) {
-			typeErrors++;
-			System.out.println(error(n) + n.argName.idname + " is already declared.");
+			
 		}
 	}
 	
