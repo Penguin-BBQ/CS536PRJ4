@@ -381,20 +381,14 @@ public class TypeChecking extends Visitor {
 	                      { /* can't happen */ }
 	  }
 
-	
+	  boolean isErrorType(ASTNode.Types type1, ASTNode.Types type2) {
+		  return type1.equals(ASTNode.Types.Error) || type2.equals(ASTNode.Types.Error);
+	  }
+	  
 	  void visit(binaryOpNode n){
-		  
-		/*assertCondition(n.operatorCode== sym.PLUS||n.operatorCode==sym.MINUS 
-        			|| n.operatorCode== sym.EQ||n.operatorCode==sym.NOTEQ
-        			|| n.operatorCode== sym.COR||n.operatorCode==sym.CAND
-        			|| n.operatorCode== sym.OR||n.operatorCode==sym.AND
-        			|| n.operatorCode== sym.LT||n.operatorCode==sym.GT
-        			|| n.operatorCode== sym.LEQ||n.operatorCode== sym.GEQ
-        			|| n.operatorCode==sym.TIMES||n.operatorCode== sym.SLASH);*/
 		this.visit(n.leftOperand);
 		this.visit(n.rightOperand);
 		n.kind = ASTNode.Kinds.Value;
-		
 		if (!isScalar(n.leftOperand.kind)) {
 			typeErrors++;
 			System.out.println(error(n) + "Left operand of" + opToString(n.operatorCode) + "must be a scalar.");
@@ -406,18 +400,21 @@ public class TypeChecking extends Visitor {
 		if (n.operatorCode== sym.PLUS||n.operatorCode==sym.MINUS
         			||n.operatorCode== sym.TIMES||n.operatorCode==sym.SLASH){
         		n.type = ASTNode.Types.Integer;
-        		LinkedList<ASTNode.Types> opTypes = new LinkedList<ASTNode.Types>();
-        		opTypes.add(ASTNode.Types.Integer);
-        		opTypes.add(ASTNode.Types.Character);
-        		typeMustBeIn(n.leftOperand.type, opTypes,
-                	error(n) + "Left operand of" + opToString(n.operatorCode) 
-                         	+  "must be arithmetic.");
-        		typeMustBeIn(n.rightOperand.type, opTypes,
-                	error(n) + "Right operand of" + opToString(n.operatorCode) 
-                         	+  "must be arithmetic.");
+        		if (!isErrorType(n.leftOperand.type, n.rightOperand.type)) {
+	        		LinkedList<ASTNode.Types> opTypes = new LinkedList<ASTNode.Types>();
+	        		opTypes.add(ASTNode.Types.Integer);
+	        		opTypes.add(ASTNode.Types.Character);
+	        		typeMustBeIn(n.leftOperand.type, opTypes,
+	                	error(n) + "Left operand of" + opToString(n.operatorCode) 
+	                         	+  "must be arithmetic.");
+	        		typeMustBeIn(n.rightOperand.type, opTypes,
+	                	error(n) + "Right operand of" + opToString(n.operatorCode) 
+	                         	+  "must be arithmetic.");
+        		}
         	}
         	else if(n.operatorCode == sym.OR || n.operatorCode == sym.AND){
-        		if (n.leftOperand.type == ASTNode.Types.Integer){
+        		if (isErrorType(n.leftOperand.type, n.rightOperand.type)) {}//error found further down the line, skipping
+        		else if (n.leftOperand.type == ASTNode.Types.Integer){
         			typeMustBe(n.rightOperand.type, ASTNode.Types.Integer,
         					error(n) + "Both operands of" + opToString(n.operatorCode)
         					+ "must have the same type.");
@@ -438,20 +435,24 @@ public class TypeChecking extends Visitor {
         		n.type = ASTNode.Types.Boolean;
         		String errorMsg = " operand of"+
                            opToString(n.operatorCode)+"must be a bool.";
-        		if (n.leftOperand.type != ASTNode.Types.Boolean){
-        			typeErrors++;
-        			System.out.println(error(n) + "Left" + errorMsg);
+        		if (isErrorType(n.leftOperand.type, n.rightOperand.type)) {}//error found further down the line, skipping
+        		else {
+	        		if (n.leftOperand.type != ASTNode.Types.Boolean){
+	        			typeErrors++;
+	        			System.out.println(error(n) + "Left" + errorMsg);
+	        		}
+	        		if(n.rightOperand.type != ASTNode.Types.Boolean) {
+	        			typeErrors++;
+	        			System.out.println(error(n) + "Right" + errorMsg);
+	        		}	
         		}
-        		if(n.rightOperand.type != ASTNode.Types.Boolean) {
-        			typeErrors++;
-        			System.out.println(error(n) + "Right" + errorMsg);
-        		}	
         	}
         	else { // Must be a comparison operator
         		n.type = ASTNode.Types.Boolean;
         		String errorMsg = error(n)+"Operands of"+
                         opToString(n.operatorCode)+"must both be arithmetic or both must be boolean.";
-        		if (n.leftOperand.type != ASTNode.Types.Integer && 
+        		if (isErrorType(n.leftOperand.type, n.rightOperand.type)) {}//error found further down the line, skipping
+        		else if (n.leftOperand.type != ASTNode.Types.Integer && 
         				n.leftOperand.type != ASTNode.Types.Boolean && n.leftOperand.type != ASTNode.Types.Character){
         			System.out.println(errorMsg);
         			typeErrors++;
