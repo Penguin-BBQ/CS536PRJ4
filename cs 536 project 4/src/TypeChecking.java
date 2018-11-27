@@ -268,7 +268,7 @@ public class TypeChecking extends Visitor {
     	}
 	}
 
-// Extend nameNode's method to handle subscripts - CRR - Looks like calvin has done stuff, not sure if finished
+// Extend nameNode's method to handle subscripts - done
 	void visit(nameNode n){
 		this.visit(n.varName); 
         n.type=n.varName.type;
@@ -292,15 +292,17 @@ public class TypeChecking extends Visitor {
 	void visit(asgNode n){
 		this.visit(n.target);
 		this.visit(n.source);
-		if (n.target.varName.idinfo == null) {
+		
+		// verify source and target match appropriately 
+		if (n.target.varName.idinfo == null) { //nothing to be done if we didn't find the target in the symbol table
 		}
-		else if(isScalar(n.target.kind)&& !n.target.subscriptVal.isNull()) {}
+		else if(isScalar(n.target.kind)&& !n.target.subscriptVal.isNull()) {} // error handled in namenode
 		else if (isUnchangeable(n.target.varName.idinfo.kind)) {
 			typeErrors++;
 			System.out.println(error(n) + "Target of assignment can't be changed.");
 		}
 		else if (n.target.type == ASTNode.Types.Character && n.target.kind == ASTNode.Kinds.Array
-        		&& n.source.kind == ASTNode.Kinds.String){
+        		&& n.source.kind == ASTNode.Kinds.String){ // verify string length when assigning to char array
         	if (n.target.varName.idinfo != null) {
         		strLitNode str = (strLitNode) n.source;
         		int len = 0;
@@ -316,7 +318,7 @@ public class TypeChecking extends Visitor {
         		}
         	}
         }
-		else if (isScalar(n.target.kind) && isScalar(n.source.kind)){
+		else if (isScalar(n.target.kind) && isScalar(n.source.kind)){ // verify types are correct for scalar assignments
 			if (n.target.type == ASTNode.Types.Integer && n.source.type == ASTNode.Types.Character) {}
 			else if (n.target.type == ASTNode.Types.Character && n.source.type == ASTNode.Types.Integer) {}
 			else {
@@ -324,10 +326,10 @@ public class TypeChecking extends Visitor {
 	                    error(n) + "Right hand side of an assignment is not assignable to left hand side.");
 			}
 		}
-        else{
+        else{ // other cases
         	if (!typesMustBeEqual(n.source.type, n.target.type,
-                    error(n) + "Right hand side of an assignment is not assignable to left hand side.")) {}
-        	else if(n.target.kind == ASTNode.Kinds.Array && n.source.kind == ASTNode.Kinds.Array){
+                    error(n) + "Right hand side of an assignment is not assignable to left hand side.")) {}//verify types are equal
+        	else if(n.target.kind == ASTNode.Kinds.Array && n.source.kind == ASTNode.Kinds.Array){ // make sure assigning arrays are the same size
         		if (n.target.varName.idinfo != null) {
         			nameNode src = (nameNode) n.source;
         			if (src.varName.idinfo != null) {
@@ -338,7 +340,7 @@ public class TypeChecking extends Visitor {
         			}
         		}
         	}
-        	else {
+        	else { // if we've got here, we skipped all the acceptable cases
         		System.out.println(error(n) + "Right hand side of an assignment is not assignable to left hand side.");
         		typeErrors++;
         	}
@@ -571,6 +573,7 @@ public class TypeChecking extends Visitor {
 		}
 	 }
 	 
+	 // check that the statement for an operation is a scalar
 	 void scalarErrorCheck(stmtNode n, ASTNode.Kinds kind, String operator) {
 		 if (!isScalar(kind)) {
 			  typeErrors++;
@@ -645,6 +648,7 @@ public class TypeChecking extends Visitor {
 		checkDecl(n, n.constName, n.constValue.type, true, ASTNode.Kinds.Value,-1);
 	}
 	
+	//do basic decl checks that are the same for all decls
 	boolean checkDecl(declNode n, identNode name, ASTNode.Types type, boolean constant, ASTNode.Kinds kind, int arraysize) {
 		SymbolInfo id;
 		id = (SymbolInfo) st.localLookup(name.idname);
@@ -819,6 +823,7 @@ public class TypeChecking extends Visitor {
 		}
 	}
 	
+	  // returns whether or not a specific method matches a call
 	boolean isMethodRight(SymbolInfo method, callNode n) {
 		if (method.methodArgs == null) {
 			return n.args.isNull();
@@ -837,6 +842,7 @@ public class TypeChecking extends Visitor {
 		}
 	}
 	
+	//check if a method matches a call, and print errors if not
 	void printIsMethodRight(SymbolInfo method, callNode n) {
 		if (method.methodArgs == null) {
 			if (!n.args.isNull()) {
@@ -866,6 +872,7 @@ public class TypeChecking extends Visitor {
 		}
 	}
 	
+	// find and return a method matching all the same specs as the call
 	SymbolInfo findRightMethod(SymbolInfo method, callNode n) {
 		if (isMethodRight(method, n)) {
 			return method;
@@ -891,11 +898,11 @@ public class TypeChecking extends Visitor {
 			typeErrors++;
 			System.out.println(error(n) + n.methodName.idname + " is called as a procedure and must therefore return void.");
 		}
-		else {
+		else { // we found a method with the same name
 			if (method.overLoadedMethods.size() == 0) {
 				printIsMethodRight(method, n);
 			}
-			else {
+			else { //need to check overloaded methods
 				SymbolInfo match = findRightMethod(method, n);
 				if (match == null) {
 					typeErrors++;
@@ -964,6 +971,7 @@ public class TypeChecking extends Visitor {
 		  typeMustBeIn(n.operand.type, types, errorMsg);
 	  }
 		
+	  // returns whether or not a specific method matches a call
 		boolean isFctMethodRight(SymbolInfo method, fctCallNode n) {
 			if (method.methodArgs == null) {
 				return n.methodArgs.isNull();
@@ -982,6 +990,7 @@ public class TypeChecking extends Visitor {
 			}
 		}
 		
+		//check if a method matches a call, and print errors if not
 		void printIsFctMethodRight(SymbolInfo method, fctCallNode n) {
 			if (method.methodArgs == null) {
 				if (!n.methodArgs.isNull()) {
@@ -1011,6 +1020,7 @@ public class TypeChecking extends Visitor {
 			}
 		}
 		
+		// find and return a method matching all the same specs as the call
 		SymbolInfo findRightFctMethod(SymbolInfo method, fctCallNode n) {
 			if (isFctMethodRight(method, n)) {
 				return method;
@@ -1027,18 +1037,18 @@ public class TypeChecking extends Visitor {
 			this.visit(n.methodName);
 			this.visit(n.methodArgs);
 			SymbolInfo method = (SymbolInfo) st.findBottomSymbol(n.methodName.idname);
-			if (method == null) {}// will already be handled by visiting
+			if (method == null) {}// error will already be handled by visiting
 			else if (!method.kind.equals(ASTNode.Kinds.Method)) {
 				typeErrors++;
 				System.out.println(error(n) + n.methodName.idname + " isn't a method.");
 			}
-			else {
+			else { // we found a method with the same name
 				n.type = method.type;
 				n.kind = ASTNode.Kinds.Value;
-				if (method.overLoadedMethods.size() == 0) {
+				if (method.overLoadedMethods.size() == 0) { // only need to check this method
 					printIsFctMethodRight(method, n);
 				}
-				else {
+				else { // need to check all overloaded methods
 					SymbolInfo match = findRightFctMethod(method, n);
 					if (match == null) {
 						typeErrors++;
@@ -1083,14 +1093,14 @@ public class TypeChecking extends Visitor {
 
 	
 	void visit(trueNode n){
-		//System.out.println("Type checking for trueNode not yet implemented");
+		//shouldn't need type checking
 	}
 
 	void visit(falseNode n){
-		//System.out.println("Type checking for falseNode not yet implemented");
+		//shouldn't need type checking
 	}
 
 	void visit(bitStringNode n){
-		//System.out.println("Type checking for bitStringNode not yet implemented");
+		//shouldn't need type checking
 	}
 }
