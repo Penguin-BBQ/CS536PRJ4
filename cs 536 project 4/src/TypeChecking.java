@@ -19,12 +19,27 @@ public class TypeChecking extends Visitor {
 		typeErrors = 0;
 		st = new SymbolTable();
 	}
-	public static ArrayList<argDeclNode> buildArgList(methodDeclsNode node){
+	
+	public static void setArgKindAndType(argDeclNode n, TypeChecking tc){
+		if (n instanceof arrayArgDeclNode){
+			tc.visit(((arrayArgDeclNode)n).elementType);
+			n.type = ((arrayArgDeclNode)n).elementType.type;
+			n.kind = ASTNode.Kinds.ArrayParm;
+		}
+		else if(n instanceof valArgDeclNode){
+			tc.visit(((valArgDeclNode)n).argType);
+			n.type = ((valArgDeclNode)n).argType.type;
+			n.kind = ASTNode.Kinds.ScalarParm;
+		}
+	}
+	
+	public static ArrayList<argDeclNode> buildArgList(methodDeclsNode node, TypeChecking tc){
 		ArrayList<argDeclNode> argList = new ArrayList<argDeclNode>();
 		if (!node.thisDecl.args.isNull()) {
 			argDeclsNode args = (argDeclsNode) node.thisDecl.args;
 			while(true) {
 				argDeclNode arg = args.thisDecl;
+				setArgKindAndType(arg, tc);
 				argList.add(arg);
 				if(args.moreDecls.isNull()) {
 					break;
@@ -490,7 +505,7 @@ public class TypeChecking extends Visitor {
 		 requiredTypes.add(ASTNode.Types.Integer);
 		 methodDeclsNode temp = (methodDeclsNode) n.methods;
 		 while (true) {
-			 ArrayList<argDeclNode> argList = TypeChecking.buildArgList(temp);
+			 ArrayList<argDeclNode> argList = TypeChecking.buildArgList(temp, this);
 			 try {
 				 if(this.checkOverloadedTypes(temp.thisDecl)) {
 					 //Maybe do arg duplicate checking here?
@@ -849,7 +864,7 @@ public class TypeChecking extends Visitor {
 			  if(!type.equals(st.currentMethod.returnType.type)) {
 				  typeErrors++;
 				  System.out.println(error(n) + "Return type of " + st.currentMethod.name.idname + 
-						  " is " + st.currentMethod.returnType.type.toString() + ".");
+						  " is " + st.currentMethod.returnType.type.toString());
 			  }
 		  }
 	  }

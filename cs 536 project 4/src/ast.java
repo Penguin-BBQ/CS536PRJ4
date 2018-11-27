@@ -383,6 +383,9 @@ abstract class argDeclNode extends ASTNode {
         public boolean equalsType(Object o) {
         	return false;
         }
+        public boolean equalsKind(Object o) {
+        	return false;
+        }
 };
 
 
@@ -439,7 +442,29 @@ class arrayArgDeclNode extends argDeclNode {
 			return false;
 		}
 		arrayArgDeclNode temp = (arrayArgDeclNode) n;
-		if(temp.elementType.equals(this.elementType)) {
+		if(!temp.elementType.type.equals(this.elementType.type)) {
+			return false;
+		}
+			
+		return true;
+	}
+	public boolean equalsKind(Object n) {
+		if(n.getClass() != this.getClass()) {
+			return false;
+		}
+		arrayArgDeclNode temp = (arrayArgDeclNode) n;
+		if (temp.kind == null){
+			if (this.kind != null){
+				return false;
+			}
+			else{
+				return true;
+			}
+		}
+		else if (this.kind == null){
+			return false;
+		}
+		else if(!temp.kind.equals(this.kind)) {
 			return false;
 		}
 			
@@ -466,6 +491,28 @@ class valArgDeclNode extends argDeclNode {
 		}
 		valArgDeclNode temp = (valArgDeclNode) n;
 		if(!temp.argType.type.equals(this.argType.type)) {
+			return false;
+		}
+			
+		return true;
+	}
+	public boolean equalsKind(Object n) {
+		if(n.getClass() != this.getClass()) {
+			return false;
+		}
+		valArgDeclNode temp = (valArgDeclNode) n;
+		if (temp.kind == null){
+			if (this.kind != null){
+				return false;
+			}
+			else{
+				return true;
+			}
+		}
+		else if (this.kind == null){
+			return false;
+		}
+		else if(!temp.kind.equals(this.kind)) {
 			return false;
 		}
 			
