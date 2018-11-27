@@ -480,6 +480,10 @@ public class TypeChecking extends Visitor {
 			 }
 			 temp = (methodDeclsNode) temp.moreDecls;
 		 }
+		 if(!st.containsMain()) {
+			 typeErrors ++;
+			 System.out.println(error(n) + "Class must contain a main method of type void");
+		 }
 		 this.visit(n.fields);
 		 this.visit(n.methods);
 	 }
