@@ -31,10 +31,10 @@ class SymbolTable {
    }
 
    public void insert(Symb s)
-         throws DuplicateException, EmptySTException {
+         throws DuplicateException{//, EmptySTException {
       String key = (s.name().toLowerCase());
-      if (top == null)
-         throw new EmptySTException();
+      //if (top == null)
+        // throw new EmptySTException();
       if (localLookup(key) != null)
          throw new DuplicateException();
       else top.currentScope.put(key,s);

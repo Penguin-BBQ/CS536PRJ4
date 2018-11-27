@@ -189,23 +189,22 @@ public class TypeChecking extends Visitor {
             	typeErrors++;
             	n.varName.type = ASTNode.Types.Error;
 
-    	} else {
-            	id = new SymbolInfo(n.varName.idname,
-                                     ASTNode.Kinds.Var, n.varType.type);
-            	n.varName.type = n.varType.type;
-            	
-            	// check that types are the same
-            	if (!n.initValue.isNull() && (n.varType.type != ((exprNode) n.initValue).type)) {
-            		typeErrors++;
-            		System.out.println(error(n) + "The initializer must be of type " + n.varType.type);
-            	}
-		try {
-            		st.insert(id);
-		} catch (DuplicateException d) 
-                          { /* can't happen */ }
-		  catch (EmptySTException e) 
-                          { /* can't happen */ }
-            	n.varName.idinfo=id;
+    	}
+    	else {
+        	id = new SymbolInfo(n.varName.idname,
+                                 ASTNode.Kinds.Var, n.varType.type);
+        	n.varName.type = n.varType.type;
+        	
+        	// check that types are the same
+        	if (!n.initValue.isNull() && (n.varType.type != ((exprNode) n.initValue).type)) {
+        		typeErrors++;
+        		System.out.println(error(n) + "The initializer must be of type " + n.varType.type);
+        	}
+			try {
+	          st.insert(id);
+			} catch (DuplicateException d) 
+	                          { /* can't happen */ }
+	        n.varName.idinfo=id;
     	}	
         
 	};
@@ -213,25 +212,24 @@ public class TypeChecking extends Visitor {
 	void visit(nullTypeNode n){}
 	
 	void visit(intTypeNode n){
-		//no type checking needed}
+		//no type checkingneeded}
 	}
 	void visit(boolTypeNode n){
 		//no type checking needed}
 	}
 	void visit(identNode n){
 		SymbolInfo    id;
-        	assertCondition(n.kind == ASTNode.Kinds.Var); //In CSX-lite all IDs should be vars! 
-//        	id = (SymbolInfo) st.globalLookup(idname);
-        	id =  (SymbolInfo) st.globalLookup(n.idname);
-        	if (id == null) {
-               	 	System.out.println(error(n) +  n.idname +
-                             " is not declared.");
-                typeErrors++;
-                n.type = ASTNode.Types.Error;
-        } else {
-                n.type = id.type; 
-                n.idinfo = id; // Save ptr to correct symbol table entry
-        	}
+    	assertCondition(n.kind == ASTNode.Kinds.Var); //In CSX-lite all IDs should be vars! 
+    	id =  (SymbolInfo) st.globalLookup(n.idname);
+    	if (id == null) {
+           	System.out.println(error(n) +  n.idname + " is not declared.");
+            typeErrors++;
+            n.type = ASTNode.Types.Error;
+        } 
+    	else {
+            n.type = id.type; 
+            n.idinfo = id; // Save ptr to correct symbol table entry
+    	}
 	}
 
 // Extend nameNode's method to handle subscripts
@@ -473,8 +471,6 @@ public class TypeChecking extends Visitor {
 		try {
             		st.insert(id);
 		} catch (DuplicateException d) 
-                          { /* can't happen */ }
-		  catch (EmptySTException e) 
                           { /* can't happen */ }
             	n.constName.idinfo=id;
     	}	
