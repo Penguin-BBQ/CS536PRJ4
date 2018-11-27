@@ -375,9 +375,6 @@ public class TypeChecking extends Visitor {
 		this.visit(n.rightOperand);
 		n.kind = ASTNode.Kinds.Value;
 		
-		if (n.linenum == 61) {
-			System.out.println("hi");
-		}
 		if (!isScalar(n.leftOperand.kind)) {
 			typeErrors++;
 			System.out.println(error(n) + "Left operand of" + opToString(n.operatorCode) + "must be a scalar.");
@@ -425,7 +422,7 @@ public class TypeChecking extends Visitor {
         			typeErrors++;
         			System.out.println(error(n) + "Left" + errorMsg);
         		}
-        		if(n.rightOperand.type == ASTNode.Types.Boolean) {
+        		if(n.rightOperand.type != ASTNode.Types.Boolean) {
         			typeErrors++;
         			System.out.println(error(n) + "Right" + errorMsg);
         		}	
@@ -434,7 +431,7 @@ public class TypeChecking extends Visitor {
         		n.type = ASTNode.Types.Boolean;
         		String errorMsg = error(n)+"Operands of"+
                         opToString(n.operatorCode)+"must both be arithmetic or both must be boolean.";
-        		if (n.leftOperand.type != ASTNode.Types.Integer || 
+        		if (n.leftOperand.type != ASTNode.Types.Integer && 
         				n.leftOperand.type != ASTNode.Types.Boolean){
         			System.out.println(errorMsg);
         			typeErrors++;
@@ -700,7 +697,8 @@ public class TypeChecking extends Visitor {
 	  void visit(castNode n){
 		  this.visit(n.operand);
 		  this.visit(n.resultType);
-		System.out.println("Type checking for castNode not yet implemented");
+		  n.type = n.resultType.type;
+		  n.kind = ASTNode.Kinds.Value;
 	  }
 
 	  void visit(fctCallNode n){
@@ -710,6 +708,7 @@ public class TypeChecking extends Visitor {
 	  }
 	  
 	  void visit(unaryOpNode n){
+		  n.kind = ASTNode.Kinds.Value;
 		  this.visit(n.operand);
 		  if (n.operand.type == ASTNode.Types.Integer){
 			  n.type = ASTNode.Types.Integer;
@@ -718,6 +717,7 @@ public class TypeChecking extends Visitor {
 			  n.type = ASTNode.Types.Boolean;
 		  }
 		  else{
+			 n.type = ASTNode.Types.Boolean;
 			String errorMsg = error(n) + "Operand of" + opToString(n.operatorCode) 
 	        	+  "must be arithmetic or must be bool.";
 			System.out.println(errorMsg);
