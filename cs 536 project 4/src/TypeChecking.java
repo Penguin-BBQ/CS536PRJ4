@@ -17,7 +17,21 @@ public class TypeChecking extends Visitor {
 		typeErrors = 0;
 		st = new SymbolTable();
 	}
-	
+	public static ArrayList<argDeclNode> buildArgList(methodDeclsNode node){
+		ArrayList<argDeclNode> argList = new ArrayList<argDeclNode>();
+		if (!node.thisDecl.args.isNull()) {
+			argDeclsNode args = (argDeclsNode) node.thisDecl.args;
+			while(true) {
+				argDeclNode arg = args.thisDecl;
+				argList.add(arg);
+				if(args.moreDecls.isNull()) {
+					break;
+				}
+			 args = (argDeclsNode) args.moreDecls;
+			}
+		}
+		return argList;
+	}
 	boolean isScalar(ASTNode.Kinds kind){
 		return (kind == ASTNode.Kinds.Var || kind == ASTNode.Kinds.Value
 				|| kind == ASTNode.Kinds.ScalarParm);
@@ -371,16 +385,15 @@ public class TypeChecking extends Visitor {
 
 	 void  visit(memberDeclsNode n){
 		 //Build list of methods for us to check against later
-		 methodDeclsNode temp = (methodDeclsNode) n.methods;
 		 LinkedList<ASTNode.Types> requiredTypes = new LinkedList<ASTNode.Types>();
 		 requiredTypes.add(ASTNode.Types.Boolean);
 		 requiredTypes.add(ASTNode.Types.Void);
 		 requiredTypes.add(ASTNode.Types.Character);
 		 requiredTypes.add(ASTNode.Types.Integer);
+		 methodDeclsNode temp = (methodDeclsNode) n.methods;
 		 while (true) {
+			 ArrayList<argDeclNode> argList = TypeChecking.buildArgList(temp);
 			 try {
-				 ArrayList<argsNodeOption> argList = new ArrayList<argsNodeOption>();
-				 argDeclsOption tempArg = temp.thisDecl.args;
 				 st.insert(new SymbolInfo(temp.thisDecl.name.idname, ASTNode.Kinds.Method, temp.thisDecl.returnType.type, argList));
 			 } catch (DuplicateException e) {
 				 typeErrors ++;

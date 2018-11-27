@@ -35,9 +35,24 @@ class SymbolTable {
       String key = (s.name().toLowerCase());
       //if (top == null)
         // throw new EmptySTException();
-      if (localLookup(key) != null)
+      SymbolInfo checkKey = (SymbolInfo) localLookup(key);
+      if (checkKey != null)
+      {
+    	 if(checkKey.kind == ASTNode.Kinds.Method)
+    	 {
+    		 SymbolInfo sSI = (SymbolInfo) s;
+    		 if(sSI.methodArgs.equals(checkKey.methodArgs)) {
+    			 throw new DuplicateException();
+    		 }
+    		 else
+        	 {
+        		 checkKey.overLoadedMethods.add((SymbolInfo) s);
+        		 return;
+        	 } 
+    	 }
          throw new DuplicateException();
-      else top.currentScope.put(key,s);
+      }
+      top.currentScope.put(key,s);
    }
 
    public Symb localLookup(String s) {
