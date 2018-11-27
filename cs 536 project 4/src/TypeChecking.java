@@ -840,7 +840,7 @@ public class TypeChecking extends Visitor {
 		  if (n.returnVal.isNull()) {
 			 if (!st.currentMethod.returnType.type.equals(ASTNode.Types.Void)) {
 				 typeErrors++;
-				 System.out.println(error(n) + "Return type of " + " is not void.");
+				 System.out.println(error(n) + "Return type of " + st.currentMethod.name.idname +" is not void."); 
 			 }
 		  }
 		  else {
