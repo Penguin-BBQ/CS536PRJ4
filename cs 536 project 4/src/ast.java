@@ -931,7 +931,7 @@ class identNode extends exprNode {
 		idname   = "";
 		nullFlag = flag;
 	};
-
+	
 	boolean   isNull(){return nullFlag;}; // Is this node null?
 
 	static identNode NULL = new identNode(true);
