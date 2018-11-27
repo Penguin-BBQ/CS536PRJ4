@@ -66,6 +66,7 @@ public class TypeChecking extends Visitor {
 	
 	boolean isTypeCorrect(classNode n) {
     	this.visit(n);
+    	System.out.print("Error count = " + typeErrors);
     	return (typeErrors == 0);
 }
 	
@@ -88,18 +89,17 @@ public class TypeChecking extends Visitor {
                 }
 		 return true;
         }
-	 void typeMustBeIn(ASTNode.Types testType,LinkedList<ASTNode.Types> requiredTypes,String errorMsg) {
-		 if (testType == ASTNode.Types.Error){
-			 return;
-		 }
+	 boolean typeMustBeIn(ASTNode.Types testType,LinkedList<ASTNode.Types> requiredTypes,String errorMsg) {
 		 for (ASTNode.Types type : requiredTypes ){
 			 if (testType == type){
-				 return;
+				 return true;
 			 }
 		 }
 		 System.out.println(errorMsg);
      	 typeErrors++;
+     	 return false;
      }
+	 
 	String error(ASTNode n) {
 		return "Error (line " + n.linenum + "): ";
         }
@@ -368,13 +368,13 @@ public class TypeChecking extends Visitor {
 	
 	  void visit(binaryOpNode n){
 		  
-		assertCondition(n.operatorCode== sym.PLUS||n.operatorCode==sym.MINUS 
+		/*assertCondition(n.operatorCode== sym.PLUS||n.operatorCode==sym.MINUS 
         			|| n.operatorCode== sym.EQ||n.operatorCode==sym.NOTEQ
         			|| n.operatorCode== sym.COR||n.operatorCode==sym.CAND
         			|| n.operatorCode== sym.OR||n.operatorCode==sym.AND
         			|| n.operatorCode== sym.LT||n.operatorCode==sym.GT
         			|| n.operatorCode== sym.LEQ||n.operatorCode== sym.GEQ
-        			|| n.operatorCode==sym.TIMES||n.operatorCode== sym.SLASH);
+        			|| n.operatorCode==sym.TIMES||n.operatorCode== sym.SLASH);*/
 		this.visit(n.leftOperand);
 		this.visit(n.rightOperand);
 		n.kind = ASTNode.Kinds.Value;
@@ -436,12 +436,18 @@ public class TypeChecking extends Visitor {
         		String errorMsg = error(n)+"Operands of"+
                         opToString(n.operatorCode)+"must both be arithmetic or both must be boolean.";
         		if (n.leftOperand.type != ASTNode.Types.Integer && 
-        				n.leftOperand.type != ASTNode.Types.Boolean){
+        				n.leftOperand.type != ASTNode.Types.Boolean && n.leftOperand.type != ASTNode.Types.Character){
         			System.out.println(errorMsg);
         			typeErrors++;
         		}
-        		else{
+        		else if (n.leftOperand.type == ASTNode.Types.Boolean) {
         			typesMustBeEqual(n.leftOperand.type,n.rightOperand.type,errorMsg);
+        		}
+        		else{//we know the left operand is an int or a char
+        			LinkedList<ASTNode.Types> opTypes = new LinkedList<ASTNode.Types>();
+            		opTypes.add(ASTNode.Types.Integer);
+            		opTypes.add(ASTNode.Types.Character);
+        			typeMustBeIn(n.rightOperand.type,opTypes,errorMsg);
         		}
         	}
 	  }
@@ -837,6 +843,13 @@ public class TypeChecking extends Visitor {
 		  this.visit(n.resultType);
 		  n.type = n.resultType.type;
 		  n.kind = ASTNode.Kinds.Value;
+		  
+		  LinkedList<ASTNode.Types> types = new LinkedList<ASTNode.Types>();
+		  types.add(ASTNode.Types.Integer);
+		  types.add(ASTNode.Types.Character);
+		  types.add(ASTNode.Types.Boolean);
+		  String errorMsg = error(n) + "Operand of cast must be an integer, character or boolean.";
+		  typeMustBeIn(n.operand.type, types, errorMsg);
 	  }
 		
 		boolean isFctMethodRight(SymbolInfo method, fctCallNode n) {
