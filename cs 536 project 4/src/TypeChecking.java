@@ -249,9 +249,7 @@ public class TypeChecking extends Visitor {
         }
         else{
         	typesMustBeEqual(n.source.type, n.target.type,
-                    error(n) + "Both the left and right"
-                      	+ " hand sides of an assignment must "
-                        	+ "have the same type.");
+                    error(n) + "Right hand side of an assignment is not assignable to left hand side.");
         	if(n.target.kind == ASTNode.Kinds.Array && n.source.kind == ASTNode.Kinds.Array){
         		//verify each array has the same length
         	}
@@ -468,7 +466,6 @@ public class TypeChecking extends Visitor {
                                  " is already declared.");
             	typeErrors++;
             	n.constName.type = ASTNode.Types.Error;
-
     	} else {
             	id = new SymbolInfo(n.constName.idname,
                                      ASTNode.Kinds.Var, n.constValue.type);
@@ -559,6 +556,12 @@ public class TypeChecking extends Visitor {
 
 	  void visit(unaryOpNode n){
 		  this.visit(n.operand);
+		  if (!isScalar(n.operand.kind)) {
+			  typeErrors++;
+			  String errorMsg = error(n) + "Operand of" + opToString(n.operatorCode) 
+	        	+  "must be a scalar.";
+			  System.out.println(errorMsg);
+		  }
 		  if (n.operand.type == ASTNode.Types.Integer){
 			  n.type = ASTNode.Types.Integer;
 		  }
