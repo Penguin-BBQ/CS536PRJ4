@@ -616,7 +616,11 @@ public class TypeChecking extends Visitor {
 	 }
 	
 	void visit(charTypeNode n){
-		System.out.println("Type checking for charTypeNode not yet implemented");
+		//Should never happen
+		if(n.type != ASTNode.Types.Character) {
+			typeErrors++;
+			System.out.println(error(n) + "charTypeNode is not a Character type");
+		}
 	}
 	void visit(voidTypeNode n){
 		//Shouldn't need type checking
