@@ -372,7 +372,20 @@ public class TypeChecking extends Visitor {
         			|| n.operatorCode==sym.TIMES||n.operatorCode== sym.SLASH);
 		this.visit(n.leftOperand);
 		this.visit(n.rightOperand);
-        	if (n.operatorCode== sym.PLUS||n.operatorCode==sym.MINUS
+		n.kind = ASTNode.Kinds.Value;
+		
+		if (n.linenum == 61) {
+			System.out.println("hi");
+		}
+		if (!isScalar(n.leftOperand.kind)) {
+			typeErrors++;
+			System.out.println(error(n) + "Left operand of" + opToString(n.operatorCode) + "must be a scalar.");
+		}
+		if(!isScalar(n.rightOperand.kind)) {
+			typeErrors++;
+			System.out.println(error(n) + "Right operand of" + opToString(n.operatorCode) + "must be a scalar.");
+		}
+		if (n.operatorCode== sym.PLUS||n.operatorCode==sym.MINUS
         			||n.operatorCode== sym.TIMES||n.operatorCode==sym.SLASH){
         		n.type = ASTNode.Types.Integer;
         		LinkedList<ASTNode.Types> opTypes = new LinkedList<ASTNode.Types>();
@@ -380,10 +393,10 @@ public class TypeChecking extends Visitor {
         		opTypes.add(ASTNode.Types.Character);
         		typeMustBeIn(n.leftOperand.type, opTypes,
                 	error(n) + "Left operand of" + opToString(n.operatorCode) 
-                         	+  "must be an int or a char.");
+                         	+  "must be arithmetic.");
         		typeMustBeIn(n.rightOperand.type, opTypes,
                 	error(n) + "Right operand of" + opToString(n.operatorCode) 
-                         	+  "must be an int or a char.");
+                         	+  "must be arithmetic.");
         	}
         	else if(n.operatorCode == sym.OR || n.operatorCode == sym.AND){
         		if (n.leftOperand.type == ASTNode.Types.Integer){
@@ -404,31 +417,24 @@ public class TypeChecking extends Visitor {
         		}
         	}
         	else if(n.operatorCode == sym.COR || n.operatorCode == sym.CAND){
-        		String errorMsg = error(n)+"Both operands of"+
-                           opToString(n.operatorCode)+"must have the same type.";
-        		if (n.leftOperand.type == ASTNode.Types.Integer){
-        			n.type = ASTNode.Types.Integer;
-        			typesMustBeEqual(n.leftOperand.type,n.rightOperand.type,errorMsg);
-        		}
-        		else if (n.leftOperand.type == ASTNode.Types.Boolean){
-        			n.type = ASTNode.Types.Boolean;
-        			typesMustBeEqual(n.leftOperand.type,n.rightOperand.type,errorMsg);
-        		}
-        		else{
-        			errorMsg = error(n) + "Left operand of" + opToString(n.operatorCode)
-					+ "must be an int or a bool";
-        			System.out.println(errorMsg);
+        		n.type = ASTNode.Types.Boolean;
+        		String errorMsg = " operand of"+
+                           opToString(n.operatorCode)+"must be a bool.";
+        		if (n.leftOperand.type != ASTNode.Types.Boolean){
         			typeErrors++;
-        		}		
+        			System.out.println(error(n) + "Left" + errorMsg);
+        		}
+        		if(n.rightOperand.type == ASTNode.Types.Boolean) {
+        			typeErrors++;
+        			System.out.println(error(n) + "Right" + errorMsg);
+        		}	
         	}
         	else { // Must be a comparison operator
         		n.type = ASTNode.Types.Boolean;
-        		String errorMsg = error(n)+"Both operands of"+
-                           opToString(n.operatorCode)+"must have the same type.";
+        		String errorMsg = error(n)+"Operands of"+
+                        opToString(n.operatorCode)+"must both be arithmetic or both must be boolean.";
         		if (n.leftOperand.type != ASTNode.Types.Integer || 
         				n.leftOperand.type != ASTNode.Types.Boolean){
-        			errorMsg = error(n) + "Left operand of" + opToString(n.operatorCode)
-					+ "must be an int or a bool";
         			System.out.println(errorMsg);
         			typeErrors++;
         		}
@@ -704,12 +710,6 @@ public class TypeChecking extends Visitor {
 	  
 	  void visit(unaryOpNode n){
 		  this.visit(n.operand);
-		  if (!isScalar(n.operand.kind)) {
-			  typeErrors++;
-			  String errorMsg = error(n) + "Operand of" + opToString(n.operatorCode) 
-	        	+  "must be a scalar.";
-			  System.out.println(errorMsg);
-		  }
 		  if (n.operand.type == ASTNode.Types.Integer){
 			  n.type = ASTNode.Types.Integer;
 		  }
@@ -718,9 +718,15 @@ public class TypeChecking extends Visitor {
 		  }
 		  else{
 			String errorMsg = error(n) + "Operand of" + opToString(n.operatorCode) 
-	        	+  "must be an int or a char.";
+	        	+  "must be arithmetic or must be bool.";
 			System.out.println(errorMsg);
   			typeErrors++;
+		  }
+		  if (!isScalar(n.operand.kind)) {
+			  typeErrors++;
+			  String errorMsg = error(n) + "Operand of" + opToString(n.operatorCode) 
+	        	+  "must be a scalar.";
+			  System.out.println(errorMsg);
 		  }
 	  }
 
