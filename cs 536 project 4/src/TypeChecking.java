@@ -414,13 +414,13 @@ public class TypeChecking extends Visitor {
 		 }
 		 this.visit(n.fields);
 		 this.visit(n.methods);
-		 System.out.println("Type checking for valArgDeclNode not yet implemented");
 	 }
 	 
 	 void  visit(methodDeclsNode n){
 		 this.visit(n.thisDecl);
 		 this.visit(n.moreDecls);
-		 System.out.println("Type checking for valArgDeclNode not yet implemented");
+		 //Type checking not needed here, these are just declarations and we already created 
+		 //declarations when we walked the tree methods section of the tree the first time in memberDeclsNode
 	 }
 	 
 	 void visit(nullStmtNode n){}
