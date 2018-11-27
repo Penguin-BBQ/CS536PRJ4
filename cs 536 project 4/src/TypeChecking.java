@@ -248,17 +248,30 @@ public class TypeChecking extends Visitor {
 
 // Extend nameNode's method to handle subscripts
 	void visit(nameNode n){
-		this.visit(n.varName); // Subscripts not allowed in CSX Lite
-        	n.type=n.varName.type;
-        	n.kind=n.varName.kind;
-
+		this.visit(n.varName); 
+        n.type=n.varName.type;
+        n.kind=n.varName.kind;
+        if(!n.subscriptVal.isNull()) {
+        	if (isScalar(n.kind)) {
+        		typeErrors++;
+				System.out.println(error(n) + "Only arrays can be subscripted.");
+        	}
+        	else if (((exprNode) n.subscriptVal).type != ASTNode.Types.Integer && ((exprNode) n.subscriptVal).type != ASTNode.Types.Character){
+        		typeErrors++;
+        		System.out.println(error(n) + "Array subscripts must be integer or character expressions.");
+        	}
+		}
 	}
 
 	void visit(asgNode n){
+		if (n.linenum == 51) {
+			System.out.println("hi");
+		}
 		this.visit(n.target);
 		this.visit(n.source);
 		if (n.target.varName.idinfo == null) {
 		}
+		else if(isScalar(n.target.kind)&& !n.target.subscriptVal.isNull()) {}
 		else if (isUnchangeable(n.target.varName.idinfo.kind)) {
 			typeErrors++;
 			System.out.println(error(n) + "Target of assignment can't be changed.");
@@ -307,7 +320,6 @@ public class TypeChecking extends Visitor {
         		typeErrors++;
         	}
         }
-		this.visit(n.source);
 	}
 
 // Extend ifThenNode's method to handle else parts
