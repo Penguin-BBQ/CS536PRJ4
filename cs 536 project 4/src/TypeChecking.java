@@ -759,9 +759,6 @@ public class TypeChecking extends Visitor {
 	
 	void visit(forNode n) {
 		st.openScope();
-		if (n.linenum == 21){
-			System.out.println("Hi");
-		}
 		if (!areNullsValid(n.initialization, n.condition, n.variableChange)){
 			typeErrors++;
 			System.out.println(error(n) + "Either all parameters of for loop must be null or none can be null.");
@@ -1092,7 +1089,7 @@ public class TypeChecking extends Visitor {
 	  void visit(unaryOpNode n){
 		  n.kind = ASTNode.Kinds.Value;
 		  this.visit(n.operand);
-		  if (n.operand.type == ASTNode.Types.Integer){
+		  if (n.operand.type == ASTNode.Types.Integer || n.operand.type == ASTNode.Types.Character){
 			  n.type = ASTNode.Types.Integer;
 		  }
 		  else if(n.operand.type == ASTNode.Types.Boolean){
